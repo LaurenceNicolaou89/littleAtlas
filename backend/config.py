@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     OPENWEATHERMAP_API_KEY: str = ""
     GOOGLE_PLACES_API_KEY: str = ""
     ENVIRONMENT: str = "development"
+    CORS_ORIGINS: str = ""  # Comma-separated origins for production, e.g. "https://app.littleatlas.com"
 
     model_config = {
         "env_file": ".env",

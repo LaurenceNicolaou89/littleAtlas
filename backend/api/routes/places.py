@@ -15,8 +15,9 @@ async def list_places(
     lon: float = Query(..., ge=-180, le=180, description="Longitude"),
     radius: int = Query(5000, ge=100, le=50000, description="Search radius in metres"),
     category: str | None = Query(None, description="Category slug filter"),
-    age_group: str | None = Query(None, description="Age group, e.g. '0-3', '4-8'"),
+    age_group: str | None = Query(None, description="Age group: infant, toddler, preschool, school_age, or '0-3'"),
     indoor: bool | None = Query(None, description="Filter indoor/outdoor"),
+    amenities: str | None = Query(None, description="Comma-separated amenity slugs, e.g. 'changing_table,parking'"),
     q: str | None = Query(None, max_length=200, description="Free-text search query"),
     lang: str = Query("en", regex="^(en|el|ru)$", description="Response language"),
     db: AsyncSession = Depends(get_db),
@@ -30,6 +31,7 @@ async def list_places(
         category=category,
         age_group=age_group,
         indoor=indoor,
+        amenities=amenities,
         q=q,
         lang=lang,
     )

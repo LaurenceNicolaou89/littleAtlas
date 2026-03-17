@@ -1,12 +1,22 @@
+import logging
 from contextlib import asynccontextmanager
 
 import redis.asyncio as aioredis
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from config import settings
 from db.database import engine
 from api.routes import health, places, events, weather, categories
+from crawlers.scheduler import start_scheduler, stop_scheduler
+
+logger = logging.getLogger(__name__)
+
+# --- Rate Limiter (BE-006) ---
+limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
 
 @asynccontextmanager
@@ -15,8 +25,21 @@ async def lifespan(app: FastAPI):
     app.state.redis = aioredis.from_url(
         settings.REDIS_URL, decode_responses=True
     )
+
+    # Start the crawler scheduler
+    try:
+        start_scheduler(redis=app.state.redis)
+        logger.info("Crawler scheduler started")
+    except Exception:
+        logger.exception("Failed to start crawler scheduler")
+
     yield
-    # Shutdown: close Redis and dispose DB engine
+
+    # Shutdown: stop scheduler, close Redis, dispose DB engine
+    try:
+        stop_scheduler()
+    except Exception:
+        logger.exception("Error stopping crawler scheduler")
     await app.state.redis.aclose()
     await engine.dispose()
 
@@ -27,10 +50,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow all origins during development
+# Attach rate limiter to app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# --- CORS Configuration (BE-007) ---
+# In development: allow all origins
+# In production: restrict to configured origins
+if settings.ENVIRONMENT == "production" and settings.CORS_ORIGINS:
+    allowed_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
+else:
+    allowed_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

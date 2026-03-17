@@ -9,6 +9,7 @@ class EventResponse(BaseModel):
     description: str
     lat: float | None = None
     lon: float | None = None
+    distance_m: float | None = None
     venue_name: str = ""
     address: str = ""
     start_date: datetime.datetime

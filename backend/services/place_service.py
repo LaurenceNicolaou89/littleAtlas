@@ -1,13 +1,51 @@
 from __future__ import annotations
 
+from fastapi import HTTPException
 from geoalchemy2 import functions as geo_func
-from sqlalchemy import select, func, cast, Float
+from sqlalchemy import select, func, cast, Float, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 import redis.asyncio as aioredis
 
 from models.place import Place
 from models.category import Category
 from schemas.place import PlaceResponse
+
+
+# Age-group name → (min, max) mapping per business-logic.md
+AGE_GROUP_MAP: dict[str, tuple[int, int]] = {
+    "infant": (0, 1),
+    "toddler": (1, 3),
+    "preschool": (3, 5),
+    "school_age": (6, 12),
+}
+
+
+def _localized(obj: object, field_base: str, lang: str) -> str:
+    """Return the best available localized value with fallback: lang → en → first non-null."""
+    value = getattr(obj, f"{field_base}_{lang}", None)
+    if value:
+        return value
+    value = getattr(obj, f"{field_base}_en", None)
+    if value:
+        return value
+    for fallback in ("en", "el", "ru"):
+        value = getattr(obj, f"{field_base}_{fallback}", None)
+        if value:
+            return value
+    return ""
+
+
+def _resolve_age_range(age_group: str) -> tuple[int, int] | None:
+    """Resolve an age_group string to (min, max). Supports named groups and 'X-Y' format."""
+    if age_group in AGE_GROUP_MAP:
+        return AGE_GROUP_MAP[age_group]
+    parts = age_group.split("-")
+    if len(parts) == 2:
+        try:
+            return int(parts[0]), int(parts[1])
+        except ValueError:
+            return None
+    return None
 
 
 class PlaceService:
@@ -23,6 +61,7 @@ class PlaceService:
         category: str | None = None,
         age_group: str | None = None,
         indoor: bool | None = None,
+        amenities: str | None = None,
         q: str | None = None,
         lang: str = "en",
     ) -> list[PlaceResponse]:
@@ -37,9 +76,6 @@ class PlaceService:
             Float,
         ).label("distance_m")
 
-        name_col = getattr(Place, f"name_{lang}", Place.name_en)
-        desc_col = getattr(Place, f"description_{lang}", Place.description_en)
-
         stmt = (
             select(Place, Category.slug.label("category_slug"), distance)
             .outerjoin(Category, Place.category_id == Category.id)
@@ -47,6 +83,7 @@ class PlaceService:
                 geo_func.ST_DWithin(Place.location, ref_point, radius)
             )
             .order_by(distance)
+            .limit(50)
         )
 
         # Optional filters
@@ -57,14 +94,25 @@ class PlaceService:
             stmt = stmt.where(Place.is_indoor == indoor)
 
         if age_group is not None:
-            parts = age_group.split("-")
-            if len(parts) == 2:
-                age_min_val, age_max_val = int(parts[0]), int(parts[1])
+            age_range = _resolve_age_range(age_group)
+            if age_range is not None:
+                age_min_val, age_max_val = age_range
                 stmt = stmt.where(Place.age_min <= age_max_val, Place.age_max >= age_min_val)
+
+        if amenities is not None:
+            amenity_list = [a.strip() for a in amenities.split(",") if a.strip()]
+            for amenity in amenity_list:
+                stmt = stmt.where(Place.amenities.op("@>")(func.cast(f'["{amenity}"]', Place.amenities.type)))
 
         if q is not None:
             pattern = f"%{q}%"
-            stmt = stmt.where(name_col.ilike(pattern) | desc_col.ilike(pattern))
+            stmt = stmt.where(
+                or_(
+                    Place.name_en.ilike(pattern),
+                    Place.name_el.ilike(pattern),
+                    Place.name_ru.ilike(pattern),
+                )
+            )
 
         result = await self.db.execute(stmt)
         rows = result.all()
@@ -83,8 +131,8 @@ class PlaceService:
             places.append(
                 PlaceResponse(
                     id=place.id,
-                    name=getattr(place, f"name_{lang}", place.name_en),
-                    description=getattr(place, f"description_{lang}", place.description_en),
+                    name=_localized(place, "name", lang),
+                    description=_localized(place, "description", lang),
                     lat=pt[0],
                     lon=pt[1],
                     category=cat_slug,
@@ -113,7 +161,6 @@ class PlaceService:
         row = result.one_or_none()
 
         if row is None:
-            from fastapi import HTTPException
             raise HTTPException(status_code=404, detail="Place not found")
 
         place, cat_slug = row
@@ -128,8 +175,8 @@ class PlaceService:
 
         return PlaceResponse(
             id=place.id,
-            name=getattr(place, f"name_{lang}", place.name_en),
-            description=getattr(place, f"description_{lang}", place.description_en),
+            name=_localized(place, "name", lang),
+            description=_localized(place, "description", lang),
             lat=pt[0],
             lon=pt[1],
             category=cat_slug,

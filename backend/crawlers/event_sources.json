@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Cyprus Events Sample (HTML)",
+    "url": "https://www.visitcyprus.com/index.php/en/events",
+    "type": "html",
+    "selectors": {
+      "event_list": "div.event-item",
+      "title": "h3.event-title",
+      "date": "span.event-date",
+      "venue": "span.event-venue",
+      "description": "p.event-description",
+      "link": "a.event-link"
+    },
+    "date_format": "%d/%m/%Y",
+    "enabled": false
+  },
+  {
+    "name": "Cyprus Events Sample (JSON API)",
+    "url": "https://example.com/api/events",
+    "type": "json",
+    "json_paths": {
+      "event_list": "data.events",
+      "title": "title",
+      "date": "start_date",
+      "venue": "venue.name",
+      "description": "description",
+      "link": "url"
+    },
+    "date_format": "%Y-%m-%dT%H:%M:%S",
+    "enabled": false
+  }
+]
