@@ -62,8 +62,7 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     )
 
-    # Spatial and category indexes on places
-    op.create_index('idx_places_location', 'places', ['location'], postgresql_using='gist')
+    # Category index (spatial index auto-created by GeoAlchemy2 Geography column)
     op.create_index('idx_places_category', 'places', ['category_id'])
 
     # Events table
@@ -89,7 +88,7 @@ def upgrade() -> None:
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     )
 
-    op.create_index('idx_events_location', 'events', ['location'], postgresql_using='gist')
+    # Spatial index auto-created by GeoAlchemy2 Geography column
     op.create_index('idx_events_dates', 'events', ['start_date', 'end_date'])
 
 
