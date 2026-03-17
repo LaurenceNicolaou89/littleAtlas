@@ -20,14 +20,14 @@ OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
 # Mapping of OSM tag combos to our category slugs
 OSM_TAG_TO_CATEGORY: dict[str, str] = {
-    "leisure=playground": "playgrounds",
-    "leisure=park": "parks",
-    "tourism=museum": "museums",
-    "tourism=zoo": "zoos",
-    "tourism=aquarium": "aquariums",
-    "amenity=library": "libraries",
-    "sport=swimming": "swimming-pools",
-    "leisure=water_park": "water-parks",
+    "leisure=playground": "outdoor_playground",
+    "leisure=park": "park",
+    "tourism=museum": "museum",
+    "tourism=zoo": "zoo",
+    "tourism=aquarium": "aquarium",
+    "amenity=library": "library",
+    "sport=swimming": "swimming_pool",
+    "leisure=water_park": "water_park",
 }
 
 # The Overpass query filters
