@@ -85,4 +85,38 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get website => 'Ιστοσελίδα';
+
+  @override
+  String get about => 'Σχετικά';
+
+  @override
+  String get version => 'Έκδοση';
+
+  @override
+  String get dataSources => 'Πηγές Δεδομένων';
+
+  @override
+  String get privacyPolicy => 'Πολιτική Απορρήτου';
+
+  @override
+  String get termsOfService => 'Όροι Χρήσης';
+
+  @override
+  String get dataSourcesDescription =>
+      'Η εφαρμογή χρησιμοποιεί δεδομένα από τις ακόλουθες πηγές:';
+
+  @override
+  String get openStreetMap => 'OpenStreetMap';
+
+  @override
+  String get googlePlaces => 'Google Places';
+
+  @override
+  String get openWeatherMap => 'OpenWeatherMap';
+
+  @override
+  String get communityContributions => 'Συνεισφορές κοινότητας';
+
+  @override
+  String get close => 'Κλείσιμο';
 }

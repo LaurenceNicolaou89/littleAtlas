@@ -255,6 +255,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Website'**
   String get website;
+
+  /// No description provided for @about.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// No description provided for @version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get version;
+
+  /// No description provided for @dataSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Data Sources'**
+  String get dataSources;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @dataSourcesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This app uses data from the following sources:'**
+  String get dataSourcesDescription;
+
+  /// No description provided for @openStreetMap.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenStreetMap'**
+  String get openStreetMap;
+
+  /// No description provided for @googlePlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Places'**
+  String get googlePlaces;
+
+  /// No description provided for @openWeatherMap.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenWeatherMap'**
+  String get openWeatherMap;
+
+  /// No description provided for @communityContributions.
+  ///
+  /// In en, this message translates to:
+  /// **'Community contributions'**
+  String get communityContributions;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
 }
 
 class _AppLocalizationsDelegate

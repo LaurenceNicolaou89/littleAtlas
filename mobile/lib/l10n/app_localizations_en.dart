@@ -85,4 +85,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get website => 'Website';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get version => 'Version';
+
+  @override
+  String get dataSources => 'Data Sources';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get termsOfService => 'Terms of Service';
+
+  @override
+  String get dataSourcesDescription =>
+      'This app uses data from the following sources:';
+
+  @override
+  String get openStreetMap => 'OpenStreetMap';
+
+  @override
+  String get googlePlaces => 'Google Places';
+
+  @override
+  String get openWeatherMap => 'OpenWeatherMap';
+
+  @override
+  String get communityContributions => 'Community contributions';
+
+  @override
+  String get close => 'Close';
 }

@@ -11,6 +11,8 @@ class Event {
   final bool isIndoor;
   final int? ageMin;
   final int? ageMax;
+  final String? sourceUrl;
+  final double? distanceM;
 
   const Event({
     required this.id,
@@ -25,6 +27,8 @@ class Event {
     this.isIndoor = false,
     this.ageMin,
     this.ageMax,
+    this.sourceUrl,
+    this.distanceM,
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
@@ -41,6 +45,8 @@ class Event {
       isIndoor: json['is_indoor'] as bool? ?? false,
       ageMin: json['age_min'] as int?,
       ageMax: json['age_max'] as int?,
+      sourceUrl: json['source_url'] as String?,
+      distanceM: (json['distance_m'] as num?)?.toDouble(),
     );
   }
 }
