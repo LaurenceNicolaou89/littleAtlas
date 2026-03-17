@@ -6,14 +6,10 @@
 - **Workspace:** Kanban
 
 ## Status
-- Board created successfully
-- Groups and items creation BLOCKED — API token needs `boards:write` scope
-- User needs to regenerate token with correct permissions
-
-## Token Required Scopes
-- `boards:read`
-- `boards:write`
-- `me:read`
+- Board created successfully (read access confirmed)
+- Write operations (create groups/items) BLOCKED — Monday.com free plan restricts API mutations
+- Revisit when plan is upgraded
+- All tickets tracked locally in project-state/TICKETS.md as source of truth
 
 ## Groups (pending creation)
 | Group | Epic |
