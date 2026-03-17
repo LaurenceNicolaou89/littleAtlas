@@ -34,24 +34,25 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF2E7D5F),
-        unselectedItemColor: Colors.grey,
         items: [
           BottomNavigationBarItem(
-            icon: const Icon(Icons.explore),
+            icon: const Icon(Icons.explore_outlined),
+            activeIcon: const Icon(Icons.explore),
             label: l10n.explore,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search_outlined),
+            activeIcon: const Icon(Icons.search),
             label: l10n.search,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.event),
+            icon: const Icon(Icons.event_outlined),
+            activeIcon: const Icon(Icons.event),
             label: l10n.events,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings_outlined),
+            activeIcon: const Icon(Icons.settings),
             label: l10n.settings,
           ),
         ],
