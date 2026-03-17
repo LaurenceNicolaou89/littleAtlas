@@ -24,14 +24,13 @@ DATABASE_URL = os.getenv(
 )
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
-# Import models so that Base.metadata is populated
-# Adjust these imports to match your project structure
-try:
-    from app.models import Base  # noqa: F401
-    target_metadata = Base.metadata
-except ImportError:
-    # If models aren't available yet, allow migrations to run without metadata
-    target_metadata = None
+# Import Base and all models so that Base.metadata is populated
+from db.database import Base  # noqa: F401
+from models.place import Place  # noqa: F401
+from models.event import Event  # noqa: F401
+from models.category import Category  # noqa: F401
+
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
+import logging
 
 import httpx
 import redis.asyncio as aioredis
+from fastapi import HTTPException
 
 from config import settings
 from schemas.weather import WeatherResponse
+
+logger = logging.getLogger(__name__)
 
 # Cache weather data for 30 minutes per business-logic.md
 WEATHER_CACHE_TTL = 1800
@@ -22,7 +26,7 @@ def _calculate_weather_mode(
 
     Returns one of: "indoor", "caution", "outdoor".
     """
-    # Rain > 0 → indoor
+    # Rain > 0 -> indoor
     if rain > 0:
         return "indoor"
     # Temperature checks
@@ -31,13 +35,13 @@ def _calculate_weather_mode(
             return "indoor"
         if temp > 38:
             return "indoor"
-    # Wind > 50 km/h → indoor
+    # Wind > 50 km/h -> indoor
     if wind_speed_kmh > 50:
         return "indoor"
-    # UV >= 8 → caution
+    # UV >= 8 -> caution
     if uv_index is not None and uv_index >= 8:
         return "caution"
-    # Temp 10-15 → caution
+    # Temp 10-15 -> caution
     if temp is not None and 10 <= temp <= 15:
         return "caution"
     return "outdoor"
@@ -45,7 +49,7 @@ def _calculate_weather_mode(
 
 class WeatherService:
     def __init__(self, redis: aioredis.Redis) -> None:
-        self.redis = redis
+        self._redis = redis
 
     async def get_weather(self, lat: float, lon: float) -> WeatherResponse:
         """Fetch current weather, with Redis caching."""
@@ -54,7 +58,7 @@ class WeatherService:
         cache_key = f"weather:{round(lat, 2)}:{round(lon, 2)}"
 
         # Try cache first
-        cached = await self.redis.get(cache_key)
+        cached = await self._redis.get(cache_key)
         if cached is not None:
             data = json.loads(cached)
             return WeatherResponse(**data)
@@ -64,36 +68,50 @@ class WeatherService:
         if not api_key:
             return WeatherResponse(lat=lat, lon=lon)
 
-        async with httpx.AsyncClient(timeout=10) as client:
-            # Fetch current weather
-            weather_url = "https://api.openweathermap.org/data/2.5/weather"
-            weather_params = {
-                "lat": lat,
-                "lon": lon,
-                "appid": api_key,
-                "units": "metric",
-            }
-            resp = await client.get(weather_url, params=weather_params)
-            resp.raise_for_status()
-            raw = resp.json()
-
-            # Try to fetch UV index via onecall endpoint
-            uv_index: float | None = None
-            try:
-                onecall_url = "https://api.openweathermap.org/data/3.0/onecall"
-                onecall_params = {
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                # Fetch current weather
+                weather_url = "https://api.openweathermap.org/data/2.5/weather"
+                weather_params = {
                     "lat": lat,
                     "lon": lon,
                     "appid": api_key,
                     "units": "metric",
-                    "exclude": "minutely,hourly,daily,alerts",
                 }
-                uv_resp = await client.get(onecall_url, params=onecall_params)
-                if uv_resp.status_code == 200:
-                    uv_data = uv_resp.json()
-                    uv_index = uv_data.get("current", {}).get("uvi")
-            except Exception:
-                pass  # UV index is optional; proceed without it
+                resp = await client.get(weather_url, params=weather_params)
+                resp.raise_for_status()
+                raw = resp.json()
+
+                # Try to fetch UV index via onecall endpoint
+                uv_index: float | None = None
+                try:
+                    onecall_url = "https://api.openweathermap.org/data/3.0/onecall"
+                    onecall_params = {
+                        "lat": lat,
+                        "lon": lon,
+                        "appid": api_key,
+                        "units": "metric",
+                        "exclude": "minutely,hourly,daily,alerts",
+                    }
+                    uv_resp = await client.get(onecall_url, params=onecall_params)
+                    if uv_resp.status_code == 200:
+                        uv_data = uv_resp.json()
+                        uv_index = uv_data.get("current", {}).get("uvi")
+                except Exception:
+                    pass  # UV index is optional; proceed without it
+
+        except httpx.HTTPStatusError as exc:
+            logger.error("Weather API HTTP error: %s", exc.response.status_code)
+            raise HTTPException(
+                status_code=502,
+                detail="Weather service upstream error",
+            ) from exc
+        except httpx.RequestError as exc:
+            logger.error("Weather API request error: %s", exc)
+            raise HTTPException(
+                status_code=502,
+                detail="Weather service unavailable",
+            ) from exc
 
         weather_main = raw.get("weather", [{}])[0]
         main_data = raw.get("main", {})
@@ -130,6 +148,6 @@ class WeatherService:
         )
 
         # Cache the result
-        await self.redis.set(cache_key, result.model_dump_json(), ex=WEATHER_CACHE_TTL)
+        await self._redis.set(cache_key, result.model_dump_json(), ex=WEATHER_CACHE_TTL)
 
         return result

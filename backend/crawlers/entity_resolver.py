@@ -6,7 +6,7 @@ import logging
 import re
 import unicodedata
 
-from sqlalchemy import and_, func, select, text
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.place import Place
@@ -173,7 +173,9 @@ class EntityResolver:
         """Find and merge cross-source duplicates within 100m with similar names."""
         merged_count = 0
 
-        # Get all non-merged places grouped by source
+        # TODO: This loads all places into memory. For Cyprus-only scope this is
+        # acceptable, but if the dataset grows significantly this should be
+        # refactored to use batched/streaming reads.
         result = await self.db.execute(
             select(Place).where(Place.source.in_(["osm", "google", "manual"]))
         )

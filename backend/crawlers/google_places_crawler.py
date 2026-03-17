@@ -7,14 +7,12 @@ import logging
 from typing import Any
 
 import httpx
-from geoalchemy2.elements import WKTElement
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from crawlers.base import BaseCrawler
-from models.category import Category
-from models.place import Place
+from crawlers.constants import CYPRUS_CITIES
+from crawlers.utils import get_category_id, upsert_place
 
 logger = logging.getLogger(__name__)
 
@@ -24,16 +22,6 @@ PHOTO_URL_TEMPLATE = (
     "https://maps.googleapis.com/maps/api/place/photo"
     "?maxwidth=800&photo_reference={ref}&key={key}"
 )
-
-# Major Cyprus cities with coordinates
-CYPRUS_CITIES = [
-    {"name": "Nicosia", "lat": 35.1856, "lon": 33.3823},
-    {"name": "Limassol", "lat": 34.6786, "lon": 33.0413},
-    {"name": "Larnaca", "lat": 34.9003, "lon": 33.6232},
-    {"name": "Paphos", "lat": 34.7754, "lon": 32.4218},
-    {"name": "Famagusta", "lat": 35.1174, "lon": 33.9391},
-    {"name": "Ayia Napa", "lat": 34.9826, "lon": 33.9988},
-]
 
 # Google Place types to search
 SEARCH_TYPES = [
@@ -71,16 +59,6 @@ class GooglePlacesCrawler(BaseCrawler):
         self._category_cache: dict[str, int] = {}
         self._api_key = settings.GOOGLE_PLACES_API_KEY
 
-    async def _get_category_id(self, slug: str) -> int | None:
-        if slug in self._category_cache:
-            return self._category_cache[slug]
-        result = await self.db.execute(select(Category).where(Category.slug == slug))
-        cat = result.scalar_one_or_none()
-        if cat:
-            self._category_cache[slug] = cat.id
-            return cat.id
-        return None
-
     def _map_types_to_category(self, types: list[str]) -> str | None:
         """Find the best category slug from Google types list."""
         for t in types:
@@ -114,7 +92,11 @@ class GooglePlacesCrawler(BaseCrawler):
 
         types = raw_data.get("types", [])
         category_slug = self._map_types_to_category(types)
-        category_id = await self._get_category_id(category_slug) if category_slug else None
+        category_id = (
+            await get_category_id(self.db, category_slug, self._category_cache)
+            if category_slug
+            else None
+        )
 
         photos = self._extract_photos(raw_data)
 
@@ -156,46 +138,6 @@ class GooglePlacesCrawler(BaseCrawler):
         resp = await client.get(PLACE_DETAILS_URL, params=params)
         resp.raise_for_status()
         return resp.json().get("result", {})
-
-    async def _upsert_place(self, data: dict[str, Any]) -> None:
-        """Insert or update a place."""
-        result = await self.db.execute(
-            select(Place).where(
-                Place.source == "google", Place.source_id == data["source_id"]
-            )
-        )
-        existing = result.scalar_one_or_none()
-        location = WKTElement(f"POINT({data['lon']} {data['lat']})", srid=4326)
-
-        if existing:
-            existing.name_en = data["name_en"]
-            existing.location = location
-            existing.address = data["address"]
-            existing.phone = data["phone"]
-            existing.website = data["website"]
-            existing.opening_hours = data["opening_hours"]
-            existing.photos = data["photos"]
-            existing.is_indoor = data["is_indoor"]
-            if data["category_id"]:
-                existing.category_id = data["category_id"]
-        else:
-            place = Place(
-                name_en=data["name_en"],
-                name_el=data["name_el"],
-                name_ru=data["name_ru"],
-                location=location,
-                address=data["address"],
-                phone=data["phone"],
-                website=data["website"],
-                opening_hours=data["opening_hours"],
-                photos=data["photos"],
-                amenities=data["amenities"],
-                is_indoor=data["is_indoor"],
-                category_id=data["category_id"],
-                source="google",
-                source_id=data["source_id"],
-            )
-            self.db.add(place)
 
     async def _search_nearby(
         self, client: httpx.AsyncClient, city: dict, place_type: str
@@ -292,7 +234,7 @@ class GooglePlacesCrawler(BaseCrawler):
                                             "Error fetching details for %s", place_id
                                         )
 
-                                await self._upsert_place(data)
+                                await upsert_place(self.db, data, source="google")
                                 processed += 1
                             except Exception:
                                 logger.exception(

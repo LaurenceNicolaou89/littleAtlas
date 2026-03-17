@@ -9,49 +9,18 @@ import redis.asyncio as aioredis
 from models.place import Place
 from models.category import Category
 from schemas.place import PlaceResponse
+from services.common import localized, resolve_age_range
 
 
-# Age-group name → (min, max) mapping per business-logic.md
-AGE_GROUP_MAP: dict[str, tuple[int, int]] = {
-    "infant": (0, 1),
-    "toddler": (1, 3),
-    "preschool": (3, 5),
-    "school_age": (6, 12),
-}
-
-
-def _localized(obj: object, field_base: str, lang: str) -> str:
-    """Return the best available localized value with fallback: lang → en → first non-null."""
-    value = getattr(obj, f"{field_base}_{lang}", None)
-    if value:
-        return value
-    value = getattr(obj, f"{field_base}_en", None)
-    if value:
-        return value
-    for fallback in ("en", "el", "ru"):
-        value = getattr(obj, f"{field_base}_{fallback}", None)
-        if value:
-            return value
-    return ""
-
-
-def _resolve_age_range(age_group: str) -> tuple[int, int] | None:
-    """Resolve an age_group string to (min, max). Supports named groups and 'X-Y' format."""
-    if age_group in AGE_GROUP_MAP:
-        return AGE_GROUP_MAP[age_group]
-    parts = age_group.split("-")
-    if len(parts) == 2:
-        try:
-            return int(parts[0]), int(parts[1])
-        except ValueError:
-            return None
-    return None
+def _escape_like(value: str) -> str:
+    """Escape special LIKE/ILIKE characters in user input."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 class PlaceService:
     def __init__(self, db: AsyncSession, redis: aioredis.Redis) -> None:
-        self.db = db
-        self.redis = redis
+        self._db = db
+        self._redis = redis
 
     async def get_nearby(
         self,
@@ -64,6 +33,8 @@ class PlaceService:
         amenities: str | None = None,
         q: str | None = None,
         lang: str = "en",
+        offset: int = 0,
+        limit: int = 50,
     ) -> list[PlaceResponse]:
         """Return places within *radius* metres of (lat, lon) using PostGIS ST_DWithin."""
 
@@ -76,14 +47,19 @@ class PlaceService:
             Float,
         ).label("distance_m")
 
+        # Extract lat/lon in the main SELECT to avoid N+1 per-row queries
+        place_lat = func.ST_Y(func.ST_GeomFromWKB(Place.location)).label("place_lat")
+        place_lon = func.ST_X(func.ST_GeomFromWKB(Place.location)).label("place_lon")
+
         stmt = (
-            select(Place, Category.slug.label("category_slug"), distance)
+            select(Place, Category.slug.label("category_slug"), distance, place_lat, place_lon)
             .outerjoin(Category, Place.category_id == Category.id)
             .where(
                 geo_func.ST_DWithin(Place.location, ref_point, radius)
             )
             .order_by(distance)
-            .limit(50)
+            .offset(offset)
+            .limit(limit)
         )
 
         # Optional filters
@@ -94,7 +70,7 @@ class PlaceService:
             stmt = stmt.where(Place.is_indoor == indoor)
 
         if age_group is not None:
-            age_range = _resolve_age_range(age_group)
+            age_range = resolve_age_range(age_group)
             if age_range is not None:
                 age_min_val, age_max_val = age_range
                 stmt = stmt.where(Place.age_min <= age_max_val, Place.age_max >= age_min_val)
@@ -105,7 +81,8 @@ class PlaceService:
                 stmt = stmt.where(Place.amenities.op("@>")(func.cast(f'["{amenity}"]', Place.amenities.type)))
 
         if q is not None:
-            pattern = f"%{q}%"
+            escaped = _escape_like(q)
+            pattern = f"%{escaped}%"
             stmt = stmt.where(
                 or_(
                     Place.name_en.ilike(pattern),
@@ -114,27 +91,18 @@ class PlaceService:
                 )
             )
 
-        result = await self.db.execute(stmt)
+        result = await self._db.execute(stmt)
         rows = result.all()
 
         places: list[PlaceResponse] = []
-        for place, cat_slug, dist in rows:
-            # Extract lat/lon from the geography point
-            wkt_result = await self.db.execute(
-                select(
-                    func.ST_Y(func.ST_GeomFromWKB(place.location)),
-                    func.ST_X(func.ST_GeomFromWKB(place.location)),
-                )
-            )
-            pt = wkt_result.one()
-
+        for place, cat_slug, dist, p_lat, p_lon in rows:
             places.append(
                 PlaceResponse(
                     id=place.id,
-                    name=_localized(place, "name", lang),
-                    description=_localized(place, "description", lang),
-                    lat=pt[0],
-                    lon=pt[1],
+                    name=localized(place, "name", lang),
+                    description=localized(place, "description", lang),
+                    lat=p_lat,
+                    lon=p_lon,
                     category=cat_slug,
                     distance_m=round(dist, 1) if dist else None,
                     is_indoor=place.is_indoor,
@@ -152,33 +120,28 @@ class PlaceService:
 
     async def get_by_id(self, place_id: int, lang: str = "en") -> PlaceResponse:
         """Return a single place by ID."""
+        place_lat = func.ST_Y(func.ST_GeomFromWKB(Place.location)).label("place_lat")
+        place_lon = func.ST_X(func.ST_GeomFromWKB(Place.location)).label("place_lon")
+
         stmt = (
-            select(Place, Category.slug.label("category_slug"))
+            select(Place, Category.slug.label("category_slug"), place_lat, place_lon)
             .outerjoin(Category, Place.category_id == Category.id)
             .where(Place.id == place_id)
         )
-        result = await self.db.execute(stmt)
+        result = await self._db.execute(stmt)
         row = result.one_or_none()
 
         if row is None:
             raise HTTPException(status_code=404, detail="Place not found")
 
-        place, cat_slug = row
-
-        wkt_result = await self.db.execute(
-            select(
-                func.ST_Y(func.ST_GeomFromWKB(place.location)),
-                func.ST_X(func.ST_GeomFromWKB(place.location)),
-            )
-        )
-        pt = wkt_result.one()
+        place, cat_slug, p_lat, p_lon = row
 
         return PlaceResponse(
             id=place.id,
-            name=_localized(place, "name", lang),
-            description=_localized(place, "description", lang),
-            lat=pt[0],
-            lon=pt[1],
+            name=localized(place, "name", lang),
+            description=localized(place, "description", lang),
+            lat=p_lat,
+            lon=p_lon,
             category=cat_slug,
             distance_m=None,
             is_indoor=place.is_indoor,

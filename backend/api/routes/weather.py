@@ -13,6 +13,6 @@ async def get_weather(
     lat: float = Query(..., ge=-90, le=90, description="Latitude"),
     lon: float = Query(..., ge=-180, le=180, description="Longitude"),
     redis: aioredis.Redis = Depends(get_redis),
-):
+) -> WeatherResponse:
     service = WeatherService(redis=redis)
     return await service.get_weather(lat=lat, lon=lon)

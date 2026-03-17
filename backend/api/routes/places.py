@@ -19,10 +19,12 @@ async def list_places(
     indoor: bool | None = Query(None, description="Filter indoor/outdoor"),
     amenities: str | None = Query(None, description="Comma-separated amenity slugs, e.g. 'changing_table,parking'"),
     q: str | None = Query(None, max_length=200, description="Free-text search query"),
-    lang: str = Query("en", regex="^(en|el|ru)$", description="Response language"),
+    lang: str = Query("en", pattern="^(en|el|ru)$", description="Response language"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
+    limit: int = Query(50, ge=1, le=100, description="Pagination limit"),
     db: AsyncSession = Depends(get_db),
     redis: aioredis.Redis = Depends(get_redis),
-):
+) -> PlaceListResponse:
     service = PlaceService(db=db, redis=redis)
     places = await service.get_nearby(
         lat=lat,
@@ -34,6 +36,8 @@ async def list_places(
         amenities=amenities,
         q=q,
         lang=lang,
+        offset=offset,
+        limit=limit,
     )
     return PlaceListResponse(places=places, total=len(places))
 
@@ -41,9 +45,9 @@ async def list_places(
 @router.get("/places/{place_id}", response_model=PlaceResponse)
 async def get_place(
     place_id: int,
-    lang: str = Query("en", regex="^(en|el|ru)$", description="Response language"),
+    lang: str = Query("en", pattern="^(en|el|ru)$", description="Response language"),
     db: AsyncSession = Depends(get_db),
     redis: aioredis.Redis = Depends(get_redis),
-):
+) -> PlaceResponse:
     service = PlaceService(db=db, redis=redis)
     return await service.get_by_id(place_id=place_id, lang=lang)

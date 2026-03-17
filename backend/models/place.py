@@ -50,8 +50,8 @@ class Place(Base):
     is_indoor: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     age_min: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     age_max: Mapped[int] = mapped_column(Integer, nullable=False, default=18)
-    amenities = mapped_column(JSONB, nullable=True, default=list)
-    photos = mapped_column(JSONB, nullable=True, default=list)
+    amenities = mapped_column(JSONB, nullable=False, server_default="[]")
+    photos = mapped_column(JSONB, nullable=False, server_default="[]")
 
     # Data source tracking
     source: Mapped[str] = mapped_column(String(64), nullable=False, default="manual")

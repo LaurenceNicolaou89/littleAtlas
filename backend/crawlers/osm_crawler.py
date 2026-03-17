@@ -3,17 +3,13 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any
 
 import httpx
-from geoalchemy2.elements import WKTElement
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from crawlers.base import BaseCrawler
-from models.category import Category
-from models.place import Place
+from crawlers.utils import get_category_id, upsert_place
 
 logger = logging.getLogger(__name__)
 
@@ -124,17 +120,6 @@ class OSMCrawler(BaseCrawler):
         super().__init__(db)
         self._category_cache: dict[str, int] = {}
 
-    async def _get_category_id(self, slug: str) -> int | None:
-        """Look up category ID by slug, with caching."""
-        if slug in self._category_cache:
-            return self._category_cache[slug]
-        result = await self.db.execute(select(Category).where(Category.slug == slug))
-        cat = result.scalar_one_or_none()
-        if cat:
-            self._category_cache[slug] = cat.id
-            return cat.id
-        return None
-
     async def parse(self, raw_data: dict) -> dict | None:
         """Parse a single OSM element into our Place schema dict."""
         tags = raw_data.get("tags", {})
@@ -149,7 +134,11 @@ class OSMCrawler(BaseCrawler):
             return None
 
         category_slug = _determine_category_slug(tags)
-        category_id = await self._get_category_id(category_slug) if category_slug else None
+        category_id = (
+            await get_category_id(self.db, category_slug, self._category_cache)
+            if category_slug
+            else None
+        )
 
         amenities = _extract_amenities(tags)
         indoor = _is_indoor(tags)
@@ -177,44 +166,6 @@ class OSMCrawler(BaseCrawler):
             "source_id": str(raw_data["id"]),
         }
 
-    async def _upsert_place(self, data: dict[str, Any]) -> None:
-        """Insert or update a place based on source + source_id."""
-        result = await self.db.execute(
-            select(Place).where(Place.source == "osm", Place.source_id == data["source_id"])
-        )
-        existing = result.scalar_one_or_none()
-
-        location = WKTElement(f"POINT({data['lon']} {data['lat']})", srid=4326)
-
-        if existing:
-            existing.name_en = data["name_en"]
-            existing.name_el = data["name_el"]
-            existing.name_ru = data["name_ru"]
-            existing.location = location
-            existing.address = data["address"]
-            existing.phone = data["phone"]
-            existing.website = data["website"]
-            existing.is_indoor = data["is_indoor"]
-            existing.amenities = data["amenities"]
-            if data["category_id"]:
-                existing.category_id = data["category_id"]
-        else:
-            place = Place(
-                name_en=data["name_en"],
-                name_el=data["name_el"],
-                name_ru=data["name_ru"],
-                location=location,
-                address=data["address"],
-                phone=data["phone"],
-                website=data["website"],
-                is_indoor=data["is_indoor"],
-                amenities=data["amenities"],
-                category_id=data["category_id"],
-                source="osm",
-                source_id=data["source_id"],
-            )
-            self.db.add(place)
-
     async def crawl(self) -> int:
         """Run the OSM crawler and return count of items processed."""
         logger.info("OSM crawler starting")
@@ -235,7 +186,7 @@ class OSMCrawler(BaseCrawler):
                 try:
                     data = await self.parse(element)
                     if data:
-                        await self._upsert_place(data)
+                        await upsert_place(self.db, data, source="osm")
                         processed += 1
                 except Exception:
                     logger.exception("Error processing OSM element %s", element.get("id"))

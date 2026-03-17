@@ -9,13 +9,13 @@ import redis.asyncio as aioredis
 
 from models.event import Event
 from schemas.event import EventResponse
-from services.place_service import _localized, _resolve_age_range
+from services.common import localized, resolve_age_range
 
 
 class EventService:
     def __init__(self, db: AsyncSession, redis: aioredis.Redis) -> None:
-        self.db = db
-        self.redis = redis
+        self._db = db
+        self._redis = redis
 
     async def get_upcoming(
         self,
@@ -26,6 +26,8 @@ class EventService:
         date_to: datetime.date | None = None,
         age_group: str | None = None,
         lang: str = "en",
+        offset: int = 0,
+        limit: int = 50,
     ) -> list[EventResponse]:
         """Return upcoming events near (lat, lon).
 
@@ -53,6 +55,10 @@ class EventService:
             else_=1,
         ).label("happening_now")
 
+        # Extract lat/lon in the main SELECT to avoid N+1 per-row queries
+        event_lat = func.ST_Y(func.ST_GeomFromWKB(Event.location)).label("event_lat")
+        event_lon = func.ST_X(func.ST_GeomFromWKB(Event.location)).label("event_lon")
+
         # Include events that are either happening now OR upcoming
         if date_from is not None:
             date_filter_start = datetime.datetime.combine(
@@ -62,7 +68,7 @@ class EventService:
             date_filter_start = now
 
         stmt = (
-            select(Event, distance, happening_now)
+            select(Event, distance, happening_now, event_lat, event_lon)
             .where(
                 geo_func.ST_DWithin(Event.location, ref_point, radius),
                 or_(
@@ -75,6 +81,8 @@ class EventService:
                 ),
             )
             .order_by(happening_now, Event.start_date)
+            .offset(offset)
+            .limit(limit)
         )
 
         if date_to is not None:
@@ -83,33 +91,21 @@ class EventService:
             ))
 
         if age_group is not None:
-            age_range = _resolve_age_range(age_group)
+            age_range = resolve_age_range(age_group)
             if age_range is not None:
                 age_min_val, age_max_val = age_range
                 stmt = stmt.where(Event.age_min <= age_max_val, Event.age_max >= age_min_val)
 
-        result = await self.db.execute(stmt)
+        result = await self._db.execute(stmt)
         rows = result.all()
 
         events: list[EventResponse] = []
-        for event, dist, _happening in rows:
-            ev_lat: float | None = None
-            ev_lon: float | None = None
-            if event.location is not None:
-                wkt_result = await self.db.execute(
-                    select(
-                        func.ST_Y(func.ST_GeomFromWKB(event.location)),
-                        func.ST_X(func.ST_GeomFromWKB(event.location)),
-                    )
-                )
-                pt = wkt_result.one()
-                ev_lat, ev_lon = pt[0], pt[1]
-
+        for event, dist, _happening, ev_lat, ev_lon in rows:
             events.append(
                 EventResponse(
                     id=event.id,
-                    title=_localized(event, "title", lang),
-                    description=_localized(event, "description", lang),
+                    title=localized(event, "title", lang),
+                    description=localized(event, "description", lang),
                     lat=ev_lat,
                     lon=ev_lon,
                     distance_m=round(dist, 1) if dist else None,

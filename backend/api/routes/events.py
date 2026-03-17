@@ -19,10 +19,12 @@ async def list_events(
     date_from: datetime.date | None = Query(None, description="Start date filter"),
     date_to: datetime.date | None = Query(None, description="End date filter"),
     age_group: str | None = Query(None, description="Age group, e.g. '0-3', '4-8'"),
-    lang: str = Query("en", regex="^(en|el|ru)$", description="Response language"),
+    lang: str = Query("en", pattern="^(en|el|ru)$", description="Response language"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
+    limit: int = Query(50, ge=1, le=100, description="Pagination limit"),
     db: AsyncSession = Depends(get_db),
     redis: aioredis.Redis = Depends(get_redis),
-):
+) -> EventListResponse:
     service = EventService(db=db, redis=redis)
     events = await service.get_upcoming(
         lat=lat,
@@ -32,5 +34,7 @@ async def list_events(
         date_to=date_to,
         age_group=age_group,
         lang=lang,
+        offset=offset,
+        limit=limit,
     )
     return EventListResponse(events=events, total=len(events))

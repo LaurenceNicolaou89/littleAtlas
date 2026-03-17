@@ -2,8 +2,7 @@
 
 import asyncio
 import os
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import text
 
 DATABASE_URL = os.getenv(
@@ -40,7 +39,7 @@ CATEGORIES = [
 
 async def seed():
     engine = create_async_engine(DATABASE_URL)
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session() as session:
         for cat in CATEGORIES:

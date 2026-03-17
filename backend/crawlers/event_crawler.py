@@ -271,13 +271,12 @@ class EventCrawler(BaseCrawler):
         return events_raw
 
     async def _upsert_event(self, data: dict) -> None:
-        """Insert or update an event."""
-        # Look up by source + source_id (stored in source_url as secondary identifier)
+        """Insert or update an event using source + source_url as dedup key."""
+        source_url = data.get("source_url") or data.get("source_id", "")
         result = await self.db.execute(
             select(Event).where(
-                Event.source == "web",
-                Event.source_url == data.get("source_url", ""),
-                Event.title_en == data["title_en"],
+                Event.source == data.get("source", "web"),
+                Event.source_url == source_url,
             )
         )
         existing = result.scalar_one_or_none()

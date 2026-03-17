@@ -9,6 +9,7 @@ import httpx
 import redis.asyncio as aioredis
 
 from config import settings
+from crawlers.constants import CYPRUS_CITIES
 
 logger = logging.getLogger(__name__)
 
@@ -17,15 +18,31 @@ WEATHER_CACHE_TTL = 1800
 
 OPENWEATHERMAP_URL = "https://api.openweathermap.org/data/2.5/weather"
 
-# Major Cyprus cities to pre-cache
-CYPRUS_CITIES = [
-    {"name": "Nicosia", "lat": 35.1856, "lon": 33.3823},
-    {"name": "Limassol", "lat": 34.6786, "lon": 33.0413},
-    {"name": "Larnaca", "lat": 34.9003, "lon": 33.6232},
-    {"name": "Paphos", "lat": 34.7754, "lon": 32.4218},
-    {"name": "Famagusta", "lat": 35.1174, "lon": 33.9391},
-    {"name": "Ayia Napa", "lat": 34.9826, "lon": 33.9988},
-]
+
+def _calculate_weather_mode(
+    temp: float | None,
+    rain: float,
+    wind_speed_kmh: float,
+    uv_index: float | None,
+) -> str:
+    """Determine weather mode per business-logic.md decision tree.
+
+    Returns one of: "indoor", "caution", "outdoor".
+    """
+    if rain > 0:
+        return "indoor"
+    if temp is not None:
+        if temp < 10:
+            return "indoor"
+        if temp > 38:
+            return "indoor"
+    if wind_speed_kmh > 50:
+        return "indoor"
+    if uv_index is not None and uv_index >= 8:
+        return "caution"
+    if temp is not None and 10 <= temp <= 15:
+        return "caution"
+    return "outdoor"
 
 
 async def sync_weather(redis: aioredis.Redis) -> int:
@@ -58,29 +75,34 @@ async def sync_weather(redis: aioredis.Redis) -> int:
                     weather_main = raw.get("weather", [{}])[0]
                     main_data = raw.get("main", {})
                     wind_data = raw.get("wind", {})
+                    rain_data = raw.get("rain", {})
 
                     temp = main_data.get("temp")
                     description = weather_main.get("description", "")
                     icon = weather_main.get("icon", "")
+                    humidity = main_data.get("humidity")
+                    wind_speed_ms = wind_data.get("speed")  # m/s from API
+                    wind_speed_kmh = (wind_speed_ms * 3.6) if wind_speed_ms is not None else 0.0
+                    rain_1h = rain_data.get("1h", 0.0)
 
-                    # Simple outdoor-friendly heuristic
-                    is_outdoor_friendly = True
-                    rain_keywords = {"rain", "storm", "thunderstorm", "snow", "drizzle"}
-                    if any(kw in description.lower() for kw in rain_keywords):
-                        is_outdoor_friendly = False
-                    if temp is not None and (temp > 38 or temp < 5):
-                        is_outdoor_friendly = False
+                    weather_mode = _calculate_weather_mode(
+                        temp=temp,
+                        rain=rain_1h,
+                        wind_speed_kmh=wind_speed_kmh,
+                        uv_index=None,  # UV not available from basic endpoint
+                    )
 
+                    # Cache using WeatherResponse-compatible schema
                     cache_data = {
                         "lat": city["lat"],
                         "lon": city["lon"],
-                        "temperature_c": temp,
-                        "feels_like_c": main_data.get("feels_like"),
-                        "humidity": main_data.get("humidity"),
-                        "wind_speed_ms": wind_data.get("speed"),
+                        "temp": temp,
                         "description": description,
                         "icon": icon,
-                        "is_outdoor_friendly": is_outdoor_friendly,
+                        "humidity": humidity,
+                        "wind_speed": wind_speed_ms,
+                        "uv_index": None,
+                        "weather_mode": weather_mode,
                     }
 
                     # Use the same cache key format as weather_service.py
