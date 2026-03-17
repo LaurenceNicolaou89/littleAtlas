@@ -47,8 +47,48 @@
   "thisMonth": "This Month",
   "all": "All",
   "happeningNow": "Happening Now",
-  "today": "Today",
-  "tomorrow": "Tomorrow",
+  "today": "TODAY",
+  "tomorrow": "TOMORROW",
   "viewSource": "View Source",
-  "event": "Event"
+  "event": "Event",
+  "pullUpForNearby": "Pull up for nearby places",
+  "noPlacesNearby": "No places nearby",
+  "searchPlaces": "Search places...",
+  "addFilter": "Add filter",
+  "clearAll": "Clear all",
+  "placesFound": "{count} {count, plural, =1{place} other{places}} found",
+  "@placesFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noPlacesFound": "No places found",
+  "tryAdjustingFilters": "Try adjusting your filters.",
+  "reset": "Reset",
+  "apply": "Apply",
+  "ageGroup": "Age Group",
+  "type": "Type",
+  "both": "Both",
+  "categoryPlaygrounds": "Playgrounds",
+  "categoryParks": "Parks & Nature",
+  "categoryRestaurants": "Restaurants",
+  "categoryEntertainment": "Entertainment",
+  "categoryCulture": "Culture & Education",
+  "categorySports": "Sports & Activities",
+  "categoryShopping": "Shopping",
+  "categoryBeaches": "Beaches",
+  "ageInfant": "Infant (0-1)",
+  "ageToddler": "Toddler (1-3)",
+  "agePreschool": "Preschool (3-5)",
+  "ageSchoolAge": "School Age (6-12)",
+  "amenityChangingTable": "Changing Table",
+  "amenityHighChair": "High Chair",
+  "amenityKidsMenu": "Kids Menu",
+  "amenityStrollerAccess": "Stroller Access",
+  "amenityFencedArea": "Fenced Area",
+  "amenityParking": "Parking",
+  "amenityWheelchairAccess": "Wheelchair Access",
+  "amenityToilets": "Toilets"
 }

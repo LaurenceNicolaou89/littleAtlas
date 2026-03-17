@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 
+import 'package:little_atlas/app.dart';
 import 'package:little_atlas/models/weather.dart';
 
-class WeatherBanner extends StatefulWidget {
+/// A compact (48dp) weather recommendation banner.
+///
+/// Finding #7: Removed the fake 3-hour forecast and expand/collapse
+/// behaviour since we don't have hourly data from the API.
+class WeatherBanner extends StatelessWidget {
   final Weather weather;
 
   const WeatherBanner({
     super.key,
     required this.weather,
   });
-
-  @override
-  State<WeatherBanner> createState() => _WeatherBannerState();
-}
-
-class _WeatherBannerState extends State<WeatherBanner> {
-  bool _expanded = false;
 
   // ── Gradient backgrounds per mode ──────────────────────────────────
   static const _outdoorGradient = [Color(0xFFFFF8E1), Color(0xFFFFECB3)];
@@ -28,7 +26,7 @@ class _WeatherBannerState extends State<WeatherBanner> {
   static const _cautionTextColor = Color(0xFFE65100);
 
   List<Color> get _gradient {
-    switch (widget.weather.mode) {
+    switch (weather.mode) {
       case WeatherMode.outdoor:
         return _outdoorGradient;
       case WeatherMode.indoor:
@@ -39,7 +37,7 @@ class _WeatherBannerState extends State<WeatherBanner> {
   }
 
   Color get _textColor {
-    switch (widget.weather.mode) {
+    switch (weather.mode) {
       case WeatherMode.outdoor:
         return _outdoorTextColor;
       case WeatherMode.indoor:
@@ -50,7 +48,7 @@ class _WeatherBannerState extends State<WeatherBanner> {
   }
 
   IconData get _weatherIcon {
-    switch (widget.weather.mode) {
+    switch (weather.mode) {
       case WeatherMode.outdoor:
         return Icons.wb_sunny;
       case WeatherMode.indoor:
@@ -61,7 +59,7 @@ class _WeatherBannerState extends State<WeatherBanner> {
   }
 
   String get _recommendationText {
-    switch (widget.weather.mode) {
+    switch (weather.mode) {
       case WeatherMode.outdoor:
         return 'Great day to be outside!';
       case WeatherMode.indoor:
@@ -76,147 +74,52 @@ class _WeatherBannerState extends State<WeatherBanner> {
     final gradient = _gradient;
     final textColor = _textColor;
 
-    return GestureDetector(
-      onTap: () => setState(() => _expanded = !_expanded),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        width: double.infinity,
-        height: _expanded ? 120 : 48,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: gradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Container(
+      width: double.infinity,
+      height: 48,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, 2),
           ),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 4,
-              offset: Offset(0, 2),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Icon(_weatherIcon, color: textColor, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              '${weather.temp.round()}\u00b0C',
+              style: TextStyle(
+                color: textColor,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _recommendationText,
+                style: TextStyle(
+                  color: textColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
-        child: _expanded
-            ? _buildExpanded(textColor)
-            : _buildCollapsed(textColor),
       ),
-    );
-  }
-
-  Widget _buildCollapsed(Color textColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Icon(_weatherIcon, color: textColor, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            '${widget.weather.temp.round()}\u00b0C',
-            style: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              _recommendationText,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Icon(
-            Icons.keyboard_arrow_down,
-            color: textColor.withValues(alpha: 0.6),
-            size: 18,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExpanded(Color textColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(_weatherIcon, color: textColor, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                '${widget.weather.temp.round()}\u00b0C \u2022 ${widget.weather.description}',
-                style: TextStyle(
-                  color: textColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-              ),
-              const Spacer(),
-              Icon(
-                Icons.keyboard_arrow_up,
-                color: textColor.withValues(alpha: 0.6),
-                size: 18,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _recommendationText,
-            style: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(height: 8),
-          // 3-hour forecast row
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _forecastItem('+1h', widget.weather.temp + 1, textColor),
-                _forecastItem('+2h', widget.weather.temp, textColor),
-                _forecastItem('+3h', widget.weather.temp - 1, textColor),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _forecastItem(String label, double temp, Color textColor) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: textColor.withValues(alpha: 0.7),
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Icon(_weatherIcon, color: textColor, size: 16),
-        const SizedBox(height: 2),
-        Text(
-          '${temp.round()}\u00b0',
-          style: TextStyle(
-            color: textColor,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
     );
   }
 }

@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:little_atlas/app.dart';
+import 'package:little_atlas/l10n/app_localizations.dart';
 import 'package:little_atlas/providers/places_provider.dart';
+import 'package:little_atlas/screens/place_detail/place_detail_screen.dart';
 import 'package:little_atlas/widgets/filter_sheet.dart';
 import 'package:little_atlas/widgets/place_card.dart';
+import 'package:little_atlas/widgets/skeleton_card.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -64,11 +67,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
     if (result == null) return;
 
-    provider.setDistanceRadius(result.distance);
-    provider.setCategories(result.categories);
-    provider.setAgeGroup(result.ageGroup);
-    provider.setPlaceType(result.placeType);
-    provider.setAmenities(result.amenities);
+    // Finding #3: apply all filters at once — single API call.
+    provider.applyFilters(result);
   }
 
   // ── Filter chip helpers ───────────────────────────────────────────
@@ -80,27 +80,27 @@ class _SearchScreenState extends State<SearchScreen> {
     return '< $meters m';
   }
 
-  String _ageGroupLabel(String value) {
+  String _ageGroupLabel(String value, AppLocalizations l10n) {
     switch (value) {
       case 'infant':
-        return 'Infant (0-1)';
+        return l10n.ageInfant;
       case 'toddler':
-        return 'Toddler (1-3)';
+        return l10n.ageToddler;
       case 'preschool':
-        return 'Preschool (3-5)';
+        return l10n.agePreschool;
       case 'school_age':
-        return 'School Age (6-12)';
+        return l10n.ageSchoolAge;
       default:
         return value;
     }
   }
 
-  String _placeTypeLabel(String value) {
+  String _placeTypeLabel(String value, AppLocalizations l10n) {
     switch (value) {
       case 'indoor':
-        return 'Indoor';
+        return l10n.indoor;
       case 'outdoor':
-        return 'Outdoor';
+        return l10n.outdoor;
       default:
         return value;
     }
@@ -111,17 +111,18 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PlacesProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSearchBar(),
-            _buildFilterChips(provider),
-            _buildResultsHeader(provider),
+            _buildSearchBar(l10n),
+            _buildFilterChips(provider, l10n),
+            _buildResultsHeader(provider, l10n),
             Expanded(
-              child: _buildResultsBody(provider),
+              child: _buildResultsBody(provider, l10n),
             ),
           ],
         ),
@@ -131,7 +132,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   // ── Search bar ────────────────────────────────────────────────────
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Material(
@@ -143,7 +144,7 @@ class _SearchScreenState extends State<SearchScreen> {
           autofocus: true,
           onChanged: _onSearchChanged,
           decoration: InputDecoration(
-            hintText: 'Search places...',
+            hintText: l10n.searchPlaces,
             hintStyle: const TextStyle(
               color: LittleAtlasApp.textTertiary,
             ),
@@ -189,7 +190,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   // ── Filter chips row ──────────────────────────────────────────────
 
-  Widget _buildFilterChips(PlacesProvider provider) {
+  Widget _buildFilterChips(PlacesProvider provider, AppLocalizations l10n) {
     final chips = <Widget>[];
 
     // "+ Add filter" action chip — always first
@@ -202,7 +203,7 @@ class _SearchScreenState extends State<SearchScreen> {
             size: 18,
             color: LittleAtlasApp.atlasGreen,
           ),
-          label: const Text('Add filter'),
+          label: Text(l10n.addFilter),
           labelStyle: const TextStyle(
             color: LittleAtlasApp.atlasGreen,
             fontWeight: FontWeight.w500,
@@ -232,7 +233,7 @@ class _SearchScreenState extends State<SearchScreen> {
     if (provider.placeType != null) {
       chips.add(
         _buildRemovableChip(
-          label: _placeTypeLabel(provider.placeType!),
+          label: _placeTypeLabel(provider.placeType!, l10n),
           onDeleted: () => provider.setPlaceType(null),
         ),
       );
@@ -242,7 +243,7 @@ class _SearchScreenState extends State<SearchScreen> {
     if (provider.selectedAgeGroup != null) {
       chips.add(
         _buildRemovableChip(
-          label: _ageGroupLabel(provider.selectedAgeGroup!),
+          label: _ageGroupLabel(provider.selectedAgeGroup!, l10n),
           onDeleted: () => provider.setAgeGroup(null),
         ),
       );
@@ -280,9 +281,9 @@ class _SearchScreenState extends State<SearchScreen> {
               minimumSize: const Size(0, 32),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text(
-              'Clear all',
-              style: TextStyle(fontSize: 12),
+            child: Text(
+              l10n.clearAll,
+              style: const TextStyle(fontSize: 12),
             ),
           ),
         ),
@@ -329,7 +330,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   // ── Results header ────────────────────────────────────────────────
 
-  Widget _buildResultsHeader(PlacesProvider provider) {
+  Widget _buildResultsHeader(PlacesProvider provider, AppLocalizations l10n) {
     if (provider.isLoading || provider.error != null) {
       return const SizedBox.shrink();
     }
@@ -338,7 +339,7 @@ class _SearchScreenState extends State<SearchScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Text(
-        '$count place${count == 1 ? '' : 's'} found',
+        l10n.placesFound(count),
         style: const TextStyle(
           color: LittleAtlasApp.textSecondary,
           fontSize: 13,
@@ -350,7 +351,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   // ── Results body (list / loading / empty / error) ─────────────────
 
-  Widget _buildResultsBody(PlacesProvider provider) {
+  Widget _buildResultsBody(PlacesProvider provider, AppLocalizations l10n) {
     // Loading state — skeleton shimmer
     if (provider.isLoading) {
       return _buildLoadingSkeleton();
@@ -363,7 +364,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
     // Empty state
     if (provider.filteredPlaces.isEmpty) {
-      return _buildEmptyState();
+      return _buildEmptyState(l10n);
     }
 
     // Results list with pull-to-refresh
@@ -384,7 +385,12 @@ class _SearchScreenState extends State<SearchScreen> {
           return PlaceCard(
             place: place,
             onTap: () {
-              // TODO: navigate to place detail
+              // Finding #5: navigate to place detail.
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => PlaceDetailScreen(place: place),
+                ),
+              );
             },
           );
         },
@@ -399,9 +405,9 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: 3,
       itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _SkeletonCard(),
+        return const Padding(
+          padding: EdgeInsets.only(bottom: 12),
+          child: SkeletonCard(),
         );
       },
     );
@@ -409,7 +415,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   // ── Empty state ───────────────────────────────────────────────────
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -422,18 +428,18 @@ class _SearchScreenState extends State<SearchScreen> {
               color: Colors.grey.shade300,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'No places found',
-              style: TextStyle(
+            Text(
+              l10n.noPlacesFound,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: LittleAtlasApp.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Try adjusting your filters.',
-              style: TextStyle(
+            Text(
+              l10n.tryAdjustingFilters,
+              style: const TextStyle(
                 fontSize: 14,
                 color: LittleAtlasApp.textSecondary,
               ),
@@ -461,7 +467,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              provider.error ?? 'An error occurred',
+              provider.error ?? AppLocalizations.of(context)!.errorOccurred,
               style: const TextStyle(
                 fontSize: 14,
                 color: LittleAtlasApp.textSecondary,
@@ -474,93 +480,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 provider.setSearchQuery(provider.searchQuery);
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Skeleton shimmer card ───────────────────────────────────────────────
-
-class _SkeletonCard extends StatefulWidget {
-  @override
-  State<_SkeletonCard> createState() => _SkeletonCardState();
-}
-
-class _SkeletonCardState extends State<_SkeletonCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-    _controller.addListener(() {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final opacity = 0.3 + (_controller.value * 0.4);
-    return Container(
-      height: 88,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200.withValues(alpha: opacity),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            // Thumbnail placeholder
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300.withValues(alpha: opacity),
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300
-                          .withValues(alpha: opacity),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 120,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300
-                          .withValues(alpha: opacity),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ],
-              ),
+              label: Text(AppLocalizations.of(context)!.retry),
             ),
           ],
         ),

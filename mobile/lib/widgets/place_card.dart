@@ -1,7 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import 'package:little_atlas/app.dart';
 import 'package:little_atlas/models/place.dart';
+import 'package:little_atlas/utils/formatters.dart';
 import 'package:little_atlas/widgets/category_chips.dart';
 
 class PlaceCard extends StatelessWidget {
@@ -20,7 +22,7 @@ class PlaceCard extends StatelessWidget {
     final icon = categoryIcon(place.category);
 
     return InkWell(
-      onTap: onTap ?? () => debugPrint('Navigate to place detail: ${place.id}'),
+      onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -64,14 +66,17 @@ class PlaceCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF212121),
+                        color: LittleAtlasApp.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
 
-                    // Category + open/closed status
+                    // Category row
+                    // Finding #13: only show open/closed if we have data.
+                    // The Place model has no opening_hours field, so we
+                    // hide the indicator entirely.
                     Row(
                       children: [
                         Text(
@@ -79,24 +84,6 @@ class PlaceCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 12,
                             color: color,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF4CAF50),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Text(
-                          'Open',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF4CAF50),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -117,7 +104,7 @@ class PlaceCard extends StatelessWidget {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF5F5F5),
+                                  color: LittleAtlasApp.background,
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
                                     color: const Color(0xFFE0E0E0),
@@ -128,7 +115,7 @@ class PlaceCard extends StatelessWidget {
                                   amenity,
                                   style: const TextStyle(
                                     fontSize: 10,
-                                    color: Color(0xFF616161),
+                                    color: LittleAtlasApp.textSecondary,
                                   ),
                                 ),
                               ),
@@ -141,14 +128,14 @@ class PlaceCard extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE8F5EE),
+                                color: LittleAtlasApp.atlasGreenLight,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
                                 _ageRangeText(),
                                 style: const TextStyle(
                                   fontSize: 10,
-                                  color: Color(0xFF2E7D5F),
+                                  color: LittleAtlasApp.atlasGreen,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -166,10 +153,10 @@ class PlaceCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
-                  _formatDistance(place.distanceM!),
+                  formatDistance(place.distanceM),
                   style: const TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF9E9E9E),
+                    color: LittleAtlasApp.textTertiary,
                   ),
                 ),
               ),
@@ -186,13 +173,6 @@ class PlaceCard extends StatelessWidget {
         child: Icon(icon, color: color, size: 32),
       ),
     );
-  }
-
-  String _formatDistance(double meters) {
-    if (meters < 1000) {
-      return '${meters.round()} m';
-    }
-    return '${(meters / 1000).toStringAsFixed(1)} km';
   }
 
   String _ageRangeText() {

@@ -1,10 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../app.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/place.dart';
+import '../../utils/formatters.dart';
+import '../../utils/launchers.dart';
 import '../../widgets/category_chips.dart';
 
 /// Maps amenity slugs to their display icon and label.
@@ -54,41 +55,13 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
     super.dispose();
   }
 
-  // ── URL launchers ───────────────────────────────────────────────────
-
-  Future<void> _launchDirections() async {
-    final url = Uri.parse(
-      'https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}',
-    );
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    }
-  }
-
-  Future<void> _launchPhone() async {
-    if (place.phone == null) return;
-    final url = Uri.parse('tel:${place.phone}');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    }
-  }
-
-  Future<void> _launchWebsite() async {
-    if (place.website == null) return;
-    final urlString =
-        place.website!.startsWith('http') ? place.website! : 'https://${place.website!}';
-    final url = Uri.parse(urlString);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    }
-  }
-
   // ── Build ───────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -133,7 +106,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                   // Amenities
                   if (place.amenities.isNotEmpty) ...[
                     Text(
-                      'Amenities',
+                      l10n.amenities,
                       style: textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 8),
@@ -146,7 +119,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                   // About
                   if (place.description.isNotEmpty) ...[
                     Text(
-                      'About',
+                      l10n.about,
                       style: textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 8),
@@ -161,7 +134,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
 
                   // Details section
                   Text(
-                    'Details',
+                    l10n.details,
                     style: textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
@@ -171,7 +144,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                     _buildDetailRow(
                       icon: Icons.place,
                       text: place.address!,
-                      onTap: _launchDirections,
+                      onTap: () => launchDirections(place.lat, place.lon),
                     ),
 
                   // Phone row
@@ -179,7 +152,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                     _buildDetailRow(
                       icon: Icons.phone,
                       text: place.phone!,
-                      onTap: _launchPhone,
+                      onTap: () => launchPhone(place.phone!),
                     ),
 
                   // Website row
@@ -187,7 +160,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                     _buildDetailRow(
                       icon: Icons.language,
                       text: place.website!,
-                      onTap: _launchWebsite,
+                      onTap: () => launchWebsite(place.website!),
                     ),
 
                   const SizedBox(height: 24),
@@ -197,9 +170,9 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
-                      onPressed: _launchDirections,
+                      onPressed: () => launchDirections(place.lat, place.lon),
                       icon: const Icon(Icons.directions),
-                      label: const Text('Get Directions'),
+                      label: Text(l10n.getDirections),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: LittleAtlasApp.atlasGreen,
                         foregroundColor: Colors.white,
@@ -216,7 +189,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
     );
   }
 
-  // ── Photo carousel (PD-002) ─────────────────────────────────────────
+  // ── Photo carousel ─────────────────────────────────────────────────
 
   Widget _buildPhotoCarousel(BuildContext context) {
     final hasPhotos = place.photos.isNotEmpty;
@@ -312,7 +285,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
 
   Widget _buildStatusRow(TextTheme textTheme) {
     final distanceText = place.distanceM != null
-        ? '${(place.distanceM! / 1000).toStringAsFixed(1)} km'
+        ? formatDistance(place.distanceM)
         : null;
 
     return Row(
@@ -337,7 +310,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
   // ── Age suitability ─────────────────────────────────────────────────
 
   Widget _buildAgeSuitability(TextTheme textTheme) {
-    final ageText = _formatAgeRange(place.ageMin, place.ageMax);
+    final ageText = formatAgeRange(place.ageMin, place.ageMax);
     return Row(
       children: [
         Icon(
@@ -354,14 +327,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
     );
   }
 
-  String _formatAgeRange(int? min, int? max) {
-    if (min != null && max != null) return 'Ages $min-$max';
-    if (min != null) return 'Ages $min+';
-    if (max != null) return 'Ages 0-$max';
-    return '';
-  }
-
-  // ── Amenity chips (PD-003) ──────────────────────────────────────────
+  // ── Amenity chips ───────────────────────────────────────────────────
 
   Widget _buildAmenityChips() {
     return Wrap(

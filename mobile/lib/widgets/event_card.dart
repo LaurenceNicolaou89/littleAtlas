@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../app.dart';
+import '../l10n/app_localizations.dart';
 import '../models/event.dart';
+import '../utils/formatters.dart';
 
 class EventCard extends StatelessWidget {
   final Event event;
@@ -14,7 +16,7 @@ class EventCard extends StatelessWidget {
     this.onTap,
   });
 
-  static const Color _eventsPink = Color(0xFFEC407A);
+  // Finding #18: use centralized color constants where possible.
   static const Color _happeningNowOrange = Color(0xFFFF9800);
   static const Color _happeningNowBg = Color(0xFFFFF3E0);
 
@@ -28,16 +30,9 @@ class EventCard extends StatelessWidget {
     return '${timeFormat.format(event.startDate)} - ${timeFormat.format(event.endDate)}';
   }
 
-  String _formatAgeRange(int? min, int? max) {
-    if (min != null && max != null) return 'Ages $min-$max';
-    if (min != null) return 'Ages $min+';
-    if (max != null) return 'Ages 0-$max';
-    return '';
-  }
-
-  String? _formatDistance() {
+  String? _formatDistanceText() {
     if (event.distanceM == null) return null;
-    return '${(event.distanceM! / 1000).toStringAsFixed(1)} km';
+    return formatDistance(event.distanceM);
   }
 
   @override
@@ -45,7 +40,8 @@ class EventCard extends StatelessWidget {
     final happeningNow = _isHappeningNow;
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
-    final borderColor = happeningNow ? _happeningNowOrange : _eventsPink;
+    final l10n = AppLocalizations.of(context)!;
+    final borderColor = happeningNow ? _happeningNowOrange : LittleAtlasApp.atlasGreen;
     final bgColor = happeningNow ? _happeningNowBg : LittleAtlasApp.surface;
 
     return Card(
@@ -82,9 +78,9 @@ class EventCard extends StatelessWidget {
                     color: _happeningNowOrange,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text(
-                    'Happening Now',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.happeningNow,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -145,7 +141,7 @@ class EventCard extends StatelessWidget {
                     child: Text(
                       [
                         event.venueName,
-                        if (_formatDistance() != null) _formatDistance(),
+                        if (_formatDistanceText() != null) _formatDistanceText(),
                       ].join(' \u2022 '),
                       style: textTheme.bodyMedium,
                       maxLines: 1,
@@ -155,7 +151,7 @@ class EventCard extends StatelessWidget {
                 ],
               ),
 
-              // Age range (baby icon)
+              // Age range (baby icon) — using shared formatter
               if (event.ageMin != null || event.ageMax != null) ...[
                 const SizedBox(height: 4),
                 Row(
@@ -167,7 +163,7 @@ class EventCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      _formatAgeRange(event.ageMin, event.ageMax),
+                      formatAgeRange(event.ageMin, event.ageMax),
                       style: textTheme.bodyMedium,
                     ),
                   ],

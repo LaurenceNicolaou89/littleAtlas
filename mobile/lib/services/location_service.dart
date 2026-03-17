@@ -4,7 +4,15 @@ import 'package:latlong2/latlong.dart';
 
 import '../utils/constants.dart';
 
+/// Finding #16: LocationService is now a singleton so the same instance
+/// is shared across explore_screen, events_screen, etc.
 class LocationService {
+  static final LocationService _instance = LocationService._internal();
+
+  factory LocationService() => _instance;
+
+  LocationService._internal();
+
   static final LatLng cyprusCenter = LatLng(
     AppConstants.cyprusCenterLat,
     AppConstants.cyprusCenterLon,

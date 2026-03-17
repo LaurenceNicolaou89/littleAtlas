@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../app.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/settings_provider.dart';
-
-/// Design tokens from design-style.md
-const _atlasGreen = Color(0xFF2E7D5F);
-const _atlasGreenLight = Color(0xFFE8F5EE);
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -103,7 +100,7 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 // Version
                 ListTile(
-                  leading: const Icon(Icons.info_outline, color: _atlasGreen),
+                  leading: const Icon(Icons.info_outline, color: LittleAtlasApp.atlasGreen),
                   title: Text(l10n.version),
                   subtitle: const Text('1.0.0'),
                 ),
@@ -111,7 +108,7 @@ class SettingsScreen extends StatelessWidget {
 
                 // Data Sources
                 ListTile(
-                  leading: const Icon(Icons.storage_outlined, color: _atlasGreen),
+                  leading: const Icon(Icons.storage_outlined, color: LittleAtlasApp.atlasGreen),
                   title: Text(l10n.dataSources),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => _showDataSourcesDialog(context, l10n),
@@ -120,7 +117,7 @@ class SettingsScreen extends StatelessWidget {
 
                 // Privacy Policy
                 ListTile(
-                  leading: const Icon(Icons.privacy_tip_outlined, color: _atlasGreen),
+                  leading: const Icon(Icons.privacy_tip_outlined, color: LittleAtlasApp.atlasGreen),
                   title: Text(l10n.privacyPolicy),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => _launchUrl('https://littleatlas.app/privacy'),
@@ -129,7 +126,7 @@ class SettingsScreen extends StatelessWidget {
 
                 // Terms of Service
                 ListTile(
-                  leading: const Icon(Icons.description_outlined, color: _atlasGreen),
+                  leading: const Icon(Icons.description_outlined, color: LittleAtlasApp.atlasGreen),
                   title: Text(l10n.termsOfService),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => _launchUrl('https://littleatlas.app/terms'),
@@ -168,7 +165,7 @@ class SettingsScreen extends StatelessWidget {
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
               l10n.close,
-              style: const TextStyle(color: _atlasGreen),
+              style: const TextStyle(color: LittleAtlasApp.atlasGreen),
             ),
           ),
         ],
@@ -204,11 +201,11 @@ class _LanguageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      tileColor: isSelected ? _atlasGreenLight : null,
+      tileColor: isSelected ? LittleAtlasApp.atlasGreenLight : null,
       leading: Text(flag, style: const TextStyle(fontSize: 24)),
       title: Text(title),
       trailing: isSelected
-          ? const Icon(Icons.check, color: _atlasGreen)
+          ? const Icon(Icons.check, color: LittleAtlasApp.atlasGreen)
           : null,
       onTap: onTap,
     );
@@ -228,7 +225,7 @@ class _DataSourceRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          const Icon(Icons.circle, size: 6, color: _atlasGreen),
+          const Icon(Icons.circle, size: 6, color: LittleAtlasApp.atlasGreen),
           const SizedBox(width: 12),
           Expanded(child: Text(label)),
         ],

@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
+import 'package:little_atlas/app.dart';
+import 'package:little_atlas/l10n/app_localizations.dart';
 import 'package:little_atlas/models/place.dart';
 import 'package:little_atlas/providers/places_provider.dart';
 import 'package:little_atlas/providers/weather_provider.dart';
+import 'package:little_atlas/screens/place_detail/place_detail_screen.dart';
 import 'package:little_atlas/services/location_service.dart';
 import 'package:little_atlas/widgets/category_chips.dart';
 import 'package:little_atlas/widgets/map/place_marker.dart';
@@ -28,10 +33,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
   bool _initialLocationLoaded = false;
   Place? _selectedPlace;
 
+  // Finding #12: debounce map pan to avoid API calls on every frame.
+  Timer? _mapMoveDebounce;
+
   @override
   void initState() {
     super.initState();
     _initLocation();
+  }
+
+  @override
+  void dispose() {
+    _mapMoveDebounce?.cancel();
+    _mapController.dispose(); // Finding #19
+    super.dispose();
   }
 
   Future<void> _initLocation() async {
@@ -57,11 +72,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final center = camera.center;
     _currentCenter = center;
 
-    // Refetch places for the new center
-    context.read<PlacesProvider>().fetchNearby(
-          center.latitude,
-          center.longitude,
-        );
+    // Finding #12: 500ms debounce.
+    _mapMoveDebounce?.cancel();
+    _mapMoveDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      context.read<PlacesProvider>().fetchNearby(
+            center.latitude,
+            center.longitude,
+          );
+    });
   }
 
   void _recenterOnLocation() async {
@@ -88,6 +107,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
     setState(() {
       _selectedPlace = _selectedPlace?.id == place.id ? null : place;
     });
+  }
+
+  void _navigateToPlaceDetail(Place place) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PlaceDetailScreen(place: place),
+      ),
+    );
   }
 
   @override
@@ -151,11 +178,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               child: Center(
                 child: PlacePreview(
                   place: _selectedPlace!,
-                  onTap: () {
-                    debugPrint(
-                      'Navigate to place detail: ${_selectedPlace!.id}',
-                    );
-                  },
+                  onTap: () => _navigateToPlaceDetail(_selectedPlace!),
                   onClose: () => setState(() => _selectedPlace = null),
                 ),
               ),
@@ -176,7 +199,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               onPressed: _recenterOnLocation,
               child: const Icon(
                 Icons.my_location,
-                color: Color(0xFF2E7D5F),
+                color: LittleAtlasApp.atlasGreen, // Finding #18
               ),
             ),
           ),
@@ -186,6 +209,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Widget _buildBottomSheet(List<Place> places) {
+    final l10n = AppLocalizations.of(context)!;
+
     return DraggableScrollableSheet(
       initialChildSize: 0.1,
       minChildSize: 0.1,
@@ -218,16 +243,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFBDBDBD),
+                          color: LittleAtlasApp.textTertiary, // Finding #18
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Pull up for nearby places',
-                        style: TextStyle(
+                      Text(
+                        l10n.pullUpForNearby,
+                        style: const TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF9E9E9E),
+                          color: LittleAtlasApp.textTertiary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -239,12 +264,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
               // ── Place list ────────────────────────────────────
               Expanded(
                 child: places.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
-                          'No places nearby',
-                          style: TextStyle(
+                          l10n.noPlacesNearby,
+                          style: const TextStyle(
                             fontSize: 14,
-                            color: Color(0xFF9E9E9E),
+                            color: LittleAtlasApp.textTertiary,
                           ),
                         ),
                       )
@@ -262,9 +287,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           final place = places[index];
                           return PlaceCard(
                             place: place,
-                            onTap: () => debugPrint(
-                              'Navigate to place detail: ${place.id}',
-                            ),
+                            onTap: () => _navigateToPlaceDetail(place),
                           );
                         },
                       ),

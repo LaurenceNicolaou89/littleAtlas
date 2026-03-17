@@ -131,7 +131,12 @@ class ApiService {
       '${ApiConfig.placeDetail}/$id',
     );
 
-    return Place.fromJson(response.data!);
+    // Finding #6: null-check before force-unwrap.
+    final data = response.data;
+    if (data == null) {
+      throw Exception('Empty response when fetching place $id');
+    }
+    return Place.fromJson(data);
   }
 
   // ── Events ──────────────────────────────────────────────────────────
@@ -173,7 +178,12 @@ class ApiService {
       queryParameters: {'lat': lat, 'lon': lon},
     );
 
-    return Weather.fromJson(response.data!);
+    // Finding #6: null-check before force-unwrap.
+    final data = response.data;
+    if (data == null) {
+      throw Exception('Empty response when fetching weather');
+    }
+    return Weather.fromJson(data);
   }
 
   // ── Categories ──────────────────────────────────────────────────────

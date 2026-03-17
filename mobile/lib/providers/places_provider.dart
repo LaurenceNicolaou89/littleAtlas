@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/place.dart';
 import '../services/api_service.dart';
 import '../services/cache_service.dart';
+import '../widgets/filter_sheet.dart';
 
 class PlacesProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -185,6 +186,17 @@ class PlacesProvider extends ChangeNotifier {
     _searchQuery = null;
     _distanceRadius = null;
     _selectedAmenities = {};
+    _refetch();
+  }
+
+  /// Applies all filter values at once and triggers a single refetch
+  /// (Finding #3 — avoids 5 sequential API calls).
+  void applyFilters(FilterResult result) {
+    _distanceRadius = result.distance;
+    _selectedCategories = result.categories;
+    _selectedAgeGroup = result.ageGroup;
+    _placeType = result.placeType;
+    _selectedAmenities = result.amenities;
     _refetch();
   }
 

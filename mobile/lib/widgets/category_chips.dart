@@ -57,18 +57,16 @@ const _categories = [
   ),
 ];
 
-class CategoryChips extends StatefulWidget {
+/// A stateless chip bar that reads selected categories directly from
+/// [PlacesProvider], eliminating dual-state bugs (Finding #1 & #2).
+class CategoryChips extends StatelessWidget {
   const CategoryChips({super.key});
 
   @override
-  State<CategoryChips> createState() => _CategoryChipsState();
-}
-
-class _CategoryChipsState extends State<CategoryChips> {
-  final Set<String> _selected = {};
-
-  @override
   Widget build(BuildContext context) {
+    final placesProvider = context.watch<PlacesProvider>();
+    final selected = placesProvider.selectedCategories;
+
     return SizedBox(
       height: 48,
       child: ListView.separated(
@@ -78,7 +76,7 @@ class _CategoryChipsState extends State<CategoryChips> {
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final cat = _categories[index];
-          final isSelected = _selected.contains(cat.slug);
+          final isSelected = selected.contains(cat.slug);
 
           return FilterChip(
             label: Text(cat.label),
@@ -86,24 +84,8 @@ class _CategoryChipsState extends State<CategoryChips> {
                 ? null
                 : Icon(cat.icon, size: 16, color: cat.color),
             selected: isSelected,
-            onSelected: (selected) {
-              setState(() {
-                if (selected) {
-                  _selected.add(cat.slug);
-                } else {
-                  _selected.remove(cat.slug);
-                }
-              });
-
-              final placesProvider = context.read<PlacesProvider>();
-              if (_selected.isEmpty) {
-                placesProvider.setCategory(null);
-              } else if (_selected.length == 1) {
-                placesProvider.setCategory(_selected.first);
-              } else {
-                // Multiple selected — pass comma-separated or first
-                placesProvider.setCategory(_selected.join(','));
-              }
+            onSelected: (_) {
+              context.read<PlacesProvider>().toggleCategory(cat.slug);
             },
             selectedColor: cat.color.withValues(alpha: 0.2),
             backgroundColor: Colors.white,

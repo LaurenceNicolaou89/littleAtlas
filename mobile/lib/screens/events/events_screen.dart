@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../app.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/event.dart';
 import '../../providers/events_provider.dart';
 import '../../services/location_service.dart';
@@ -23,7 +24,6 @@ class _EventsScreenState extends State<EventsScreen>
   bool _initialLoadDone = false;
 
   static const _filters = ['thisWeek', 'thisMonth', 'all'];
-  static const _filterLabels = ['This Week', 'This Month', 'All'];
 
   @override
   void initState() {
@@ -59,15 +59,18 @@ class _EventsScreenState extends State<EventsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final filterLabels = [l10n.thisWeek, l10n.thisMonth, l10n.all];
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Events'),
+        title: Text(l10n.events),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
-          tabs: _filterLabels
+          tabs: filterLabels
               .map((label) => Tab(text: label))
               .toList(),
         ),
@@ -79,17 +82,17 @@ class _EventsScreenState extends State<EventsScreen>
           }
 
           if (provider.error != null) {
-            return _buildErrorState(provider.error!);
+            return _buildErrorState(provider.error!, l10n);
           }
 
           if (provider.events.isEmpty) {
-            return _buildEmptyState();
+            return _buildEmptyState(l10n);
           }
 
           return RefreshIndicator(
             onRefresh: _loadEvents,
             color: LittleAtlasApp.atlasGreen,
-            child: _buildGroupedList(provider.events),
+            child: _buildGroupedList(provider.events, l10n),
           );
         },
       ),
@@ -98,7 +101,7 @@ class _EventsScreenState extends State<EventsScreen>
 
   // ── Grouped list with date headers ──────────────────────────────────
 
-  Widget _buildGroupedList(List<Event> events) {
+  Widget _buildGroupedList(List<Event> events, AppLocalizations l10n) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
@@ -115,9 +118,9 @@ class _EventsScreenState extends State<EventsScreen>
 
       String label;
       if (eventDate == today) {
-        label = 'TODAY';
+        label = l10n.today;
       } else if (eventDate == tomorrow) {
-        label = 'TOMORROW';
+        label = l10n.tomorrow;
       } else {
         label = dateFormat.format(eventDate).toUpperCase();
       }
@@ -191,7 +194,7 @@ class _EventsScreenState extends State<EventsScreen>
 
   // ── Empty state ─────────────────────────────────────────────────────
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -205,7 +208,7 @@ class _EventsScreenState extends State<EventsScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'No upcoming events nearby.',
+              l10n.noUpcomingEvents,
               style: TextStyle(
                 fontSize: 16,
                 color: LittleAtlasApp.textSecondary,
@@ -220,7 +223,7 @@ class _EventsScreenState extends State<EventsScreen>
 
   // ── Error state ─────────────────────────────────────────────────────
 
-  Widget _buildErrorState(String error) {
+  Widget _buildErrorState(String error, AppLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -244,7 +247,7 @@ class _EventsScreenState extends State<EventsScreen>
             const SizedBox(height: 16),
             OutlinedButton(
               onPressed: _loadEvents,
-              child: const Text('Retry'),
+              child: Text(l10n.retry),
             ),
           ],
         ),

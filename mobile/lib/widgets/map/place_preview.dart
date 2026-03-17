@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:little_atlas/app.dart';
 import 'package:little_atlas/models/place.dart';
+import 'package:little_atlas/utils/formatters.dart';
 import 'package:little_atlas/widgets/category_chips.dart';
 
 /// A small floating card that appears above the selected map marker.
@@ -56,7 +58,7 @@ class PlacePreview extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF212121),
+                        color: LittleAtlasApp.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -68,7 +70,7 @@ class PlacePreview extends StatelessWidget {
                       child: const Icon(
                         Icons.close,
                         size: 16,
-                        color: Color(0xFF9E9E9E),
+                        color: LittleAtlasApp.textTertiary,
                       ),
                     ),
                 ],
@@ -89,14 +91,14 @@ class PlacePreview extends StatelessWidget {
                     const Icon(
                       Icons.near_me,
                       size: 12,
-                      color: Color(0xFF9E9E9E),
+                      color: LittleAtlasApp.textTertiary,
                     ),
                     const SizedBox(width: 2),
                     Text(
-                      _formatDistance(place.distanceM!),
+                      formatDistance(place.distanceM),
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF9E9E9E),
+                        color: LittleAtlasApp.textTertiary,
                       ),
                     ),
                   ],
@@ -107,12 +109,5 @@ class PlacePreview extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _formatDistance(double meters) {
-    if (meters < 1000) {
-      return '${meters.round()} m';
-    }
-    return '${(meters / 1000).toStringAsFixed(1)} km';
   }
 }

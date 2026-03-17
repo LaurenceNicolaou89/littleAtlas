@@ -321,6 +321,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
+
+  /// No description provided for @getDirections.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Directions'**
+  String get getDirections;
+
+  /// No description provided for @amenities.
+  ///
+  /// In en, this message translates to:
+  /// **'Amenities'**
+  String get amenities;
+
+  /// No description provided for @details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get details;
+
+  /// No description provided for @openNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Open now'**
+  String get openNow;
+
+  /// No description provided for @closed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get closed;
+
+  /// No description provided for @noUpcomingEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming events nearby.'**
+  String get noUpcomingEvents;
+
+  /// No description provided for @thisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get thisWeek;
+
+  /// No description provided for @thisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get thisMonth;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @happeningNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Happening Now'**
+  String get happeningNow;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'TODAY'**
+  String get today;
+
+  /// No description provided for @tomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'TOMORROW'**
+  String get tomorrow;
+
+  /// No description provided for @viewSource.
+  ///
+  /// In en, this message translates to:
+  /// **'View Source'**
+  String get viewSource;
+
+  /// No description provided for @event.
+  ///
+  /// In en, this message translates to:
+  /// **'Event'**
+  String get event;
+
+  /// No description provided for @pullUpForNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull up for nearby places'**
+  String get pullUpForNearby;
+
+  /// No description provided for @noPlacesNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'No places nearby'**
+  String get noPlacesNearby;
+
+  /// No description provided for @searchPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Search places...'**
+  String get searchPlaces;
+
+  /// No description provided for @addFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Add filter'**
+  String get addFilter;
+
+  /// No description provided for @clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get clearAll;
+
+  /// No description provided for @placesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {count, plural, =1{place} other{places}} found'**
+  String placesFound(int count);
+
+  /// No description provided for @noPlacesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No places found'**
+  String get noPlacesFound;
+
+  /// No description provided for @tryAdjustingFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Try adjusting your filters.'**
+  String get tryAdjustingFilters;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @ageGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Age Group'**
+  String get ageGroup;
+
+  /// No description provided for @type.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get type;
+
+  /// No description provided for @both.
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get both;
+
+  /// No description provided for @categoryPlaygrounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Playgrounds'**
+  String get categoryPlaygrounds;
+
+  /// No description provided for @categoryParks.
+  ///
+  /// In en, this message translates to:
+  /// **'Parks & Nature'**
+  String get categoryParks;
+
+  /// No description provided for @categoryRestaurants.
+  ///
+  /// In en, this message translates to:
+  /// **'Restaurants'**
+  String get categoryRestaurants;
+
+  /// No description provided for @categoryEntertainment.
+  ///
+  /// In en, this message translates to:
+  /// **'Entertainment'**
+  String get categoryEntertainment;
+
+  /// No description provided for @categoryCulture.
+  ///
+  /// In en, this message translates to:
+  /// **'Culture & Education'**
+  String get categoryCulture;
+
+  /// No description provided for @categorySports.
+  ///
+  /// In en, this message translates to:
+  /// **'Sports & Activities'**
+  String get categorySports;
+
+  /// No description provided for @categoryShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping'**
+  String get categoryShopping;
+
+  /// No description provided for @categoryBeaches.
+  ///
+  /// In en, this message translates to:
+  /// **'Beaches'**
+  String get categoryBeaches;
+
+  /// No description provided for @ageInfant.
+  ///
+  /// In en, this message translates to:
+  /// **'Infant (0-1)'**
+  String get ageInfant;
+
+  /// No description provided for @ageToddler.
+  ///
+  /// In en, this message translates to:
+  /// **'Toddler (1-3)'**
+  String get ageToddler;
+
+  /// No description provided for @agePreschool.
+  ///
+  /// In en, this message translates to:
+  /// **'Preschool (3-5)'**
+  String get agePreschool;
+
+  /// No description provided for @ageSchoolAge.
+  ///
+  /// In en, this message translates to:
+  /// **'School Age (6-12)'**
+  String get ageSchoolAge;
+
+  /// No description provided for @amenityChangingTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing Table'**
+  String get amenityChangingTable;
+
+  /// No description provided for @amenityHighChair.
+  ///
+  /// In en, this message translates to:
+  /// **'High Chair'**
+  String get amenityHighChair;
+
+  /// No description provided for @amenityKidsMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Kids Menu'**
+  String get amenityKidsMenu;
+
+  /// No description provided for @amenityStrollerAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Stroller Access'**
+  String get amenityStrollerAccess;
+
+  /// No description provided for @amenityFencedArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Fenced Area'**
+  String get amenityFencedArea;
+
+  /// No description provided for @amenityParking.
+  ///
+  /// In en, this message translates to:
+  /// **'Parking'**
+  String get amenityParking;
+
+  /// No description provided for @amenityWheelchairAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Wheelchair Access'**
+  String get amenityWheelchairAccess;
+
+  /// No description provided for @amenityToilets.
+  ///
+  /// In en, this message translates to:
+  /// **'Toilets'**
+  String get amenityToilets;
 }
 
 class _AppLocalizationsDelegate

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../app.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/event.dart';
+import '../../utils/formatters.dart';
+import '../../utils/launchers.dart';
 
 class EventDetailScreen extends StatelessWidget {
   final Event event;
@@ -14,26 +16,6 @@ class EventDetailScreen extends StatelessWidget {
     super.key,
     required this.event,
   });
-
-  Future<void> _launchDirections() async {
-    final url = Uri.parse(
-      'https://www.google.com/maps/dir/?api=1&destination=${event.lat},${event.lon}',
-    );
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    }
-  }
-
-  Future<void> _launchSourceUrl() async {
-    if (event.sourceUrl == null) return;
-    final urlString = event.sourceUrl!.startsWith('http')
-        ? event.sourceUrl!
-        : 'https://${event.sourceUrl!}';
-    final url = Uri.parse(urlString);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    }
-  }
 
   String _formatDateRange() {
     final dateFormat = DateFormat('EEEE, MMM d, yyyy');
@@ -52,21 +34,15 @@ class EventDetailScreen extends StatelessWidget {
         '${dateFormat.format(event.endDate)} ${timeFormat.format(event.endDate)}';
   }
 
-  String _formatAgeRange(int? min, int? max) {
-    if (min != null && max != null) return 'Ages $min-$max';
-    if (min != null) return 'Ages $min+';
-    if (max != null) return 'Ages 0-$max';
-    return '';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Event'),
+        title: Text(l10n.event),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -134,7 +110,7 @@ class EventDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Age suitability with baby icon
+            // Age suitability with baby icon — using shared formatter
             if (event.ageMin != null || event.ageMax != null) ...[
               Row(
                 children: [
@@ -145,7 +121,7 @@ class EventDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    _formatAgeRange(event.ageMin, event.ageMax),
+                    formatAgeRange(event.ageMin, event.ageMax),
                     style: textTheme.bodyLarge,
                   ),
                 ],
@@ -179,7 +155,7 @@ class EventDetailScreen extends StatelessWidget {
                             height: 36,
                             child: Container(
                               decoration: const BoxDecoration(
-                                color: Color(0xFFEC407A),
+                                color: LittleAtlasApp.atlasGreen, // Finding #18
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -207,14 +183,14 @@ class EventDetailScreen extends StatelessWidget {
               const SizedBox(height: 24),
             ],
 
-            // Get Directions button
+            // Get Directions button — using shared launcher
             SizedBox(
               width: double.infinity,
               height: 48,
               child: ElevatedButton.icon(
-                onPressed: _launchDirections,
+                onPressed: () => launchDirections(event.lat, event.lon),
                 icon: const Icon(Icons.directions),
-                label: const Text('Get Directions'),
+                label: Text(l10n.getDirections),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: LittleAtlasApp.atlasGreen,
                   foregroundColor: Colors.white,
@@ -222,16 +198,16 @@ class EventDetailScreen extends StatelessWidget {
               ),
             ),
 
-            // View Source link button
+            // View Source link button — using shared launcher
             if (event.sourceUrl != null) ...[
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: OutlinedButton.icon(
-                  onPressed: _launchSourceUrl,
+                  onPressed: () => launchWebsite(event.sourceUrl!),
                   icon: const Icon(Icons.open_in_new),
-                  label: const Text('View Source'),
+                  label: Text(l10n.viewSource),
                 ),
               ),
             ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:little_atlas/app.dart';
+import 'package:little_atlas/l10n/app_localizations.dart';
 
 /// A modal bottom sheet that lets users set search filters for places.
 ///
@@ -41,39 +42,40 @@ class _FilterSheetState extends State<FilterSheet> {
     _DistanceOption(label: '25 km', meters: 25000),
   ];
 
-  static const List<String> _allCategories = [
-    'Playgrounds',
-    'Parks & Nature',
-    'Restaurants',
-    'Entertainment',
-    'Culture & Education',
-    'Sports & Activities',
-    'Shopping',
-    'Beaches',
+  // Category labels are resolved from l10n at build time.
+  static List<_CategoryOption> _categoryOptions(AppLocalizations l10n) => [
+    _CategoryOption(label: l10n.categoryPlaygrounds, value: 'Playgrounds'),
+    _CategoryOption(label: l10n.categoryParks, value: 'Parks & Nature'),
+    _CategoryOption(label: l10n.categoryRestaurants, value: 'Restaurants'),
+    _CategoryOption(label: l10n.categoryEntertainment, value: 'Entertainment'),
+    _CategoryOption(label: l10n.categoryCulture, value: 'Culture & Education'),
+    _CategoryOption(label: l10n.categorySports, value: 'Sports & Activities'),
+    _CategoryOption(label: l10n.categoryShopping, value: 'Shopping'),
+    _CategoryOption(label: l10n.categoryBeaches, value: 'Beaches'),
   ];
 
-  static const List<_AgeOption> _ageOptions = [
-    _AgeOption(label: 'Infant (0-1)', value: 'infant'),
-    _AgeOption(label: 'Toddler (1-3)', value: 'toddler'),
-    _AgeOption(label: 'Preschool (3-5)', value: 'preschool'),
-    _AgeOption(label: 'School Age (6-12)', value: 'school_age'),
+  static List<_AgeOption> _ageOptions(AppLocalizations l10n) => [
+    _AgeOption(label: l10n.ageInfant, value: 'infant'),
+    _AgeOption(label: l10n.ageToddler, value: 'toddler'),
+    _AgeOption(label: l10n.agePreschool, value: 'preschool'),
+    _AgeOption(label: l10n.ageSchoolAge, value: 'school_age'),
   ];
 
-  static const List<_TypeOption> _typeOptions = [
-    _TypeOption(label: 'Indoor', value: 'indoor'),
-    _TypeOption(label: 'Outdoor', value: 'outdoor'),
-    _TypeOption(label: 'Both', value: null),
+  static List<_TypeOption> _typeOptions(AppLocalizations l10n) => [
+    _TypeOption(label: l10n.indoor, value: 'indoor'),
+    _TypeOption(label: l10n.outdoor, value: 'outdoor'),
+    _TypeOption(label: l10n.both, value: null),
   ];
 
-  static const List<String> _allAmenities = [
-    'Changing Table',
-    'High Chair',
-    'Kids Menu',
-    'Stroller Access',
-    'Fenced Area',
-    'Parking',
-    'Wheelchair Access',
-    'Toilets',
+  static List<_AmenityOption> _amenityOptions(AppLocalizations l10n) => [
+    _AmenityOption(label: l10n.amenityChangingTable, value: 'Changing Table'),
+    _AmenityOption(label: l10n.amenityHighChair, value: 'High Chair'),
+    _AmenityOption(label: l10n.amenityKidsMenu, value: 'Kids Menu'),
+    _AmenityOption(label: l10n.amenityStrollerAccess, value: 'Stroller Access'),
+    _AmenityOption(label: l10n.amenityFencedArea, value: 'Fenced Area'),
+    _AmenityOption(label: l10n.amenityParking, value: 'Parking'),
+    _AmenityOption(label: l10n.amenityWheelchairAccess, value: 'Wheelchair Access'),
+    _AmenityOption(label: l10n.amenityToilets, value: 'Toilets'),
   ];
 
   // ── Lifecycle ─────────────────────────────────────────────────────
@@ -115,6 +117,7 @@ class _FilterSheetState extends State<FilterSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -150,12 +153,12 @@ class _FilterSheetState extends State<FilterSheet> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Filters',
+                      l10n.filters,
                       style: theme.textTheme.headlineMedium,
                     ),
                     TextButton(
                       onPressed: _reset,
-                      child: const Text('Reset'),
+                      child: Text(l10n.reset),
                     ),
                   ],
                 ),
@@ -168,16 +171,16 @@ class _FilterSheetState extends State<FilterSheet> {
                   controller: scrollController,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   children: [
-                    _buildSectionHeader('Distance'),
+                    _buildSectionHeader(l10n.distance),
                     _buildDistanceSection(),
-                    _buildSectionHeader('Category'),
-                    _buildCategorySection(),
-                    _buildSectionHeader('Age Group'),
-                    _buildAgeGroupSection(),
-                    _buildSectionHeader('Type'),
-                    _buildTypeSection(),
-                    _buildSectionHeader('Amenities'),
-                    _buildAmenitiesSection(),
+                    _buildSectionHeader(l10n.category),
+                    _buildCategorySection(l10n),
+                    _buildSectionHeader(l10n.ageGroup),
+                    _buildAgeGroupSection(l10n),
+                    _buildSectionHeader(l10n.type),
+                    _buildTypeSection(l10n),
+                    _buildSectionHeader(l10n.amenities),
+                    _buildAmenitiesSection(l10n),
                     const SizedBox(height: 16),
                   ],
                 ),
@@ -198,7 +201,7 @@ class _FilterSheetState extends State<FilterSheet> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text('Apply'),
+                    child: Text(l10n.apply),
                   ),
                 ),
               ),
@@ -243,20 +246,20 @@ class _FilterSheetState extends State<FilterSheet> {
     );
   }
 
-  Widget _buildCategorySection() {
+  Widget _buildCategorySection(AppLocalizations l10n) {
     return Column(
-      children: _allCategories.map((cat) {
+      children: _categoryOptions(l10n).map((opt) {
         return CheckboxListTile(
-          title: Text(cat),
-          value: _categories.contains(cat),
+          title: Text(opt.label),
+          value: _categories.contains(opt.value),
           activeColor: LittleAtlasApp.atlasGreen,
           dense: true,
           onChanged: (checked) {
             setState(() {
               if (checked == true) {
-                _categories.add(cat);
+                _categories.add(opt.value);
               } else {
-                _categories.remove(cat);
+                _categories.remove(opt.value);
               }
             });
           },
@@ -265,9 +268,9 @@ class _FilterSheetState extends State<FilterSheet> {
     );
   }
 
-  Widget _buildAgeGroupSection() {
+  Widget _buildAgeGroupSection(AppLocalizations l10n) {
     return Column(
-      children: _ageOptions.map((opt) {
+      children: _ageOptions(l10n).map((opt) {
         return RadioListTile<String?>(
           title: Text(opt.label),
           value: opt.value,
@@ -280,9 +283,9 @@ class _FilterSheetState extends State<FilterSheet> {
     );
   }
 
-  Widget _buildTypeSection() {
+  Widget _buildTypeSection(AppLocalizations l10n) {
     return Column(
-      children: _typeOptions.map((opt) {
+      children: _typeOptions(l10n).map((opt) {
         return RadioListTile<String?>(
           title: Text(opt.label),
           value: opt.value,
@@ -295,20 +298,20 @@ class _FilterSheetState extends State<FilterSheet> {
     );
   }
 
-  Widget _buildAmenitiesSection() {
+  Widget _buildAmenitiesSection(AppLocalizations l10n) {
     return Column(
-      children: _allAmenities.map((amenity) {
+      children: _amenityOptions(l10n).map((opt) {
         return CheckboxListTile(
-          title: Text(amenity),
-          value: _amenities.contains(amenity),
+          title: Text(opt.label),
+          value: _amenities.contains(opt.value),
           activeColor: LittleAtlasApp.atlasGreen,
           dense: true,
           onChanged: (checked) {
             setState(() {
               if (checked == true) {
-                _amenities.add(amenity);
+                _amenities.add(opt.value);
               } else {
-                _amenities.remove(amenity);
+                _amenities.remove(opt.value);
               }
             });
           },
@@ -326,6 +329,12 @@ class _DistanceOption {
   const _DistanceOption({required this.label, required this.meters});
 }
 
+class _CategoryOption {
+  final String label;
+  final String value;
+  const _CategoryOption({required this.label, required this.value});
+}
+
 class _AgeOption {
   final String label;
   final String value;
@@ -336,6 +345,12 @@ class _TypeOption {
   final String label;
   final String? value;
   const _TypeOption({required this.label, required this.value});
+}
+
+class _AmenityOption {
+  final String label;
+  final String value;
+  const _AmenityOption({required this.label, required this.value});
 }
 
 /// Returned from the [FilterSheet] when the user taps "Apply".

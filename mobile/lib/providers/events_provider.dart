@@ -2,9 +2,11 @@ import 'package:flutter/foundation.dart';
 
 import '../models/event.dart';
 import '../services/api_service.dart';
+import '../services/cache_service.dart';
 
 class EventsProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
+  final CacheService _cacheService = CacheService();
 
   List<Event> _events = [];
   bool _isLoading = false;
@@ -40,6 +42,8 @@ class EventsProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
+    final cacheKey = _buildCacheKey(lat, lon);
+
     try {
       final dateRange = _dateRangeForFilter();
       _events = await _apiService.getEvents(
@@ -48,8 +52,13 @@ class EventsProvider extends ChangeNotifier {
         dateFrom: dateRange.$1,
         dateTo: dateRange.$2,
       );
+
+      // Finding #11: cache events.
+      await _cacheService.saveEvents(cacheKey, _events);
     } catch (e) {
       _error = e.toString();
+      // Fall back to cache.
+      _events = await _cacheService.getEvents(cacheKey) ?? [];
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -87,5 +96,9 @@ class EventsProvider extends ChangeNotifier {
       default:
         return (null, null);
     }
+  }
+
+  String _buildCacheKey(double lat, double lon) {
+    return 'events_${lat.toStringAsFixed(2)}_${lon.toStringAsFixed(2)}_$_timeFilter';
   }
 }

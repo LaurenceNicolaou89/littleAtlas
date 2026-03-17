@@ -1,6 +1,8 @@
 class ApiConfig {
   const ApiConfig._();
 
+  // TODO(production): Replace with flutter_dotenv for environment-specific
+  // configuration (e.g. dotenv.env['API_BASE_URL']).
   static const String baseUrl = 'http://localhost:8000/api/v1';
 
   static const String places = '/places';
