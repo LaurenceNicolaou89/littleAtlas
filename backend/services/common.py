@@ -14,13 +14,17 @@ AGE_GROUP_MAP: dict[str, tuple[int, int]] = {
 
 def localized(obj: object, field_base: str, lang: str) -> str:
     """Return the best available localized value with fallback: lang -> en -> first non-null."""
+    # Short-circuit for English: no fallback chain needed
+    if lang == "en":
+        return getattr(obj, f"{field_base}_en", None) or ""
+
     value = getattr(obj, f"{field_base}_{lang}", None)
     if value:
         return value
     value = getattr(obj, f"{field_base}_en", None)
     if value:
         return value
-    for fallback in ("en", "el", "ru"):
+    for fallback in ("el", "ru"):
         value = getattr(obj, f"{field_base}_{fallback}", None)
         if value:
             return value

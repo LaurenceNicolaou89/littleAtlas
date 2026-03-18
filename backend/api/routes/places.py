@@ -26,7 +26,7 @@ async def list_places(
     redis: aioredis.Redis = Depends(get_redis),
 ) -> PlaceListResponse:
     service = PlaceService(db=db, redis=redis)
-    places = await service.get_nearby(
+    places, total = await service.get_nearby(
         lat=lat,
         lon=lon,
         radius=radius,
@@ -39,7 +39,7 @@ async def list_places(
         offset=offset,
         limit=limit,
     )
-    return PlaceListResponse(places=places, total=len(places))
+    return PlaceListResponse(places=places, total=total)
 
 
 @router.get("/places/{place_id}", response_model=PlaceResponse)

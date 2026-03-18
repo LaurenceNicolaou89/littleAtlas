@@ -35,7 +35,7 @@ class PlaceService:
         lang: str = "en",
         offset: int = 0,
         limit: int = 50,
-    ) -> list[PlaceResponse]:
+    ) -> tuple[list[PlaceResponse], int]:
         """Return places within *radius* metres of (lat, lon) using PostGIS ST_DWithin."""
 
         # Reference point as Geography
@@ -51,18 +51,16 @@ class PlaceService:
         place_lat = func.ST_Y(func.ST_GeomFromWKB(Place.location)).label("place_lat")
         place_lon = func.ST_X(func.ST_GeomFromWKB(Place.location)).label("place_lon")
 
+        # Build base query with all WHERE clauses first
         stmt = (
             select(Place, Category.slug.label("category_slug"), distance, place_lat, place_lon)
             .outerjoin(Category, Place.category_id == Category.id)
             .where(
                 geo_func.ST_DWithin(Place.location, ref_point, radius)
             )
-            .order_by(distance)
-            .offset(offset)
-            .limit(limit)
         )
 
-        # Optional filters
+        # Optional filters — applied BEFORE ordering/pagination
         if category is not None:
             stmt = stmt.where(Category.slug == category)
 
@@ -91,6 +89,13 @@ class PlaceService:
                 )
             )
 
+        # Count query using the same filters (no limit/offset)
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total = (await self._db.execute(count_stmt)).scalar_one()
+
+        # Now add ordering and pagination
+        stmt = stmt.order_by(distance).offset(offset).limit(limit)
+
         result = await self._db.execute(stmt)
         rows = result.all()
 
@@ -116,7 +121,7 @@ class PlaceService:
                     opening_hours=place.opening_hours,
                 )
             )
-        return places
+        return places, total
 
     async def get_by_id(self, place_id: int, lang: str = "en") -> PlaceResponse:
         """Return a single place by ID."""

@@ -66,7 +66,10 @@ class WeatherService:
         # Fetch from OpenWeatherMap
         api_key = settings.OPENWEATHERMAP_API_KEY
         if not api_key:
-            return WeatherResponse(lat=lat, lon=lon)
+            raise HTTPException(
+                status_code=503,
+                detail="Weather service unavailable - API key not configured",
+            )
 
         try:
             async with httpx.AsyncClient(timeout=10) as client:

@@ -28,7 +28,7 @@ class EventService:
         lang: str = "en",
         offset: int = 0,
         limit: int = 50,
-    ) -> list[EventResponse]:
+    ) -> tuple[list[EventResponse], int]:
         """Return upcoming events near (lat, lon).
 
         Events that are "Happening Now" (start_date <= now <= end_date)
@@ -67,6 +67,7 @@ class EventService:
         else:
             date_filter_start = now
 
+        # Build base query with all WHERE clauses first
         stmt = (
             select(Event, distance, happening_now, event_lat, event_lon)
             .where(
@@ -80,11 +81,9 @@ class EventService:
                     ),
                 ),
             )
-            .order_by(happening_now, Event.start_date)
-            .offset(offset)
-            .limit(limit)
         )
 
+        # Optional filters — applied BEFORE ordering/pagination
         if date_to is not None:
             stmt = stmt.where(Event.start_date <= datetime.datetime.combine(
                 date_to, datetime.time.max, tzinfo=datetime.timezone.utc
@@ -95,6 +94,13 @@ class EventService:
             if age_range is not None:
                 age_min_val, age_max_val = age_range
                 stmt = stmt.where(Event.age_min <= age_max_val, Event.age_max >= age_min_val)
+
+        # Count query using the same filters (no limit/offset)
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total = (await self._db.execute(count_stmt)).scalar_one()
+
+        # Now add ordering and pagination
+        stmt = stmt.order_by(happening_now, Event.start_date).offset(offset).limit(limit)
 
         result = await self._db.execute(stmt)
         rows = result.all()
@@ -119,4 +125,4 @@ class EventService:
                     source_url=event.source_url,
                 )
             )
-        return events
+        return events, total

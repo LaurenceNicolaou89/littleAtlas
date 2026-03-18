@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from geoalchemy2.elements import WKTElement
@@ -10,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.category import Category
 from models.place import Place
+
+logger = logging.getLogger(__name__)
 
 
 async def get_category_id(
@@ -28,12 +31,20 @@ async def get_category_id(
 
 async def upsert_place(db: AsyncSession, data: dict[str, Any], source: str) -> None:
     """Insert or update a place based on source + source_id."""
+    try:
+        lat = float(data["lat"])
+        lon = float(data["lon"])
+    except (ValueError, TypeError, KeyError):
+        logger.warning("Skipping place %s: invalid lat/lon: lat=%r, lon=%r",
+                        data.get("source_id"), data.get("lat"), data.get("lon"))
+        return
+
     result = await db.execute(
         select(Place).where(Place.source == source, Place.source_id == data["source_id"])
     )
     existing = result.scalar_one_or_none()
 
-    location = WKTElement(f"POINT({data['lon']} {data['lat']})", srid=4326)
+    location = WKTElement(f"POINT({lon} {lat})", srid=4326)
 
     if existing:
         existing.name_en = data["name_en"]

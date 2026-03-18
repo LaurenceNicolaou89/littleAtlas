@@ -26,7 +26,7 @@ async def list_events(
     redis: aioredis.Redis = Depends(get_redis),
 ) -> EventListResponse:
     service = EventService(db=db, redis=redis)
-    events = await service.get_upcoming(
+    events, total = await service.get_upcoming(
         lat=lat,
         lon=lon,
         radius=radius,
@@ -37,4 +37,4 @@ async def list_events(
         offset=offset,
         limit=limit,
     )
-    return EventListResponse(events=events, total=len(events))
+    return EventListResponse(events=events, total=total)

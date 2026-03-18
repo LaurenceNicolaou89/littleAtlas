@@ -40,7 +40,10 @@ async def lifespan(app: FastAPI):
         stop_scheduler()
     except Exception:
         logger.exception("Error stopping crawler scheduler")
-    await app.state.redis.aclose()
+    try:
+        await app.state.redis.aclose()
+    except Exception:
+        logger.exception("Error closing Redis connection")
     await engine.dispose()
 
 
