@@ -95,17 +95,17 @@ Font: **Nunito** (Google Fonts) — all weights. Chosen for rounded letterforms,
 
 | Element | Radius |
 |---------|--------|
-| Cards | 18px (squircle-like) |
-| Buttons | 14px |
-| Chips / Pills | 20px (full pill) |
-| Bottom Sheet | 24px (top corners) |
-| Search Bar | 24px (full pill) |
-| Date Blocks | 14px |
-| Floating Nav Bar | 20px |
-| Thumbnails | 14px |
-| Weather Hero | 18px |
-| Badges | 10px |
-| Icon containers | 12px |
+| Cards | 18dp (squircle-like) |
+| Buttons | 14dp |
+| Chips / Pills | 20dp (full pill) |
+| Bottom Sheet | 24dp (top corners) |
+| Search Bar | 24dp (full pill) |
+| Date Blocks | 14dp |
+| Floating Nav Bar | 20dp |
+| Thumbnails | 14dp |
+| Weather Hero | 18dp |
+| Badges | 10dp |
+| Icon containers | 12dp |
 
 ### Spacing (4dp base)
 
@@ -168,7 +168,7 @@ Top to bottom:
 
 1. **Header** — "Events" title (22sp Bold).
 2. **Time filter tabs** — "This Week" / "This Month" / "All". Selected: violet fill, white text, 12px radius. Unselected: white fill, border.
-3. **Date group headers** — Sticky. "TODAY", "TOMORROW", or date. 11sp Bold ALL CAPS, text secondary.
+3. **Date group headers** — Sticky. "TODAY", "TOMORROW", or date. 12sp Bold ALL CAPS, text secondary. Uses the same `SectionHeader` style without the "See all" link.
 4. **Event cards** — White card, 18px radius. Left: date block (56x56, gradient fill matching category/event color, white text: month/day/weekday). Right: event title (15sp SemiBold), time + venue (12sp), age + distance pills. LIVE events: left rose-pink border, pink glow shadow, animated LIVE badge.
 
 ### 5.4 Map
@@ -187,7 +187,7 @@ Same as current Explore screen structure but with updated styling:
 1. **Photo carousel hero** — Full-width, 220dp height. Swipeable with page indicator dots. Bottom gradient overlay with place name (22sp ExtraBold white) and category + city subtitle.
 2. **Back button** — White circle (36dp), top-left, subtle shadow.
 3. **Quick info pills** — Row below hero. Open status (green tint), distance (violet tint), age range (pink tint), closing time (gold tint). All 12px radius.
-4. **Amenities section** — Header (11sp Bold ALL CAPS). Gray-tinted chips (12px radius) with emoji icons.
+4. **Amenities section** — `SectionHeader` (12sp Bold ALL CAPS, no "See all" link). Gray-tinted chips (12dp radius) with emoji icons.
 5. **About section** — Header + body text (13sp, 1.6 line height).
 6. **Details section** — Address, phone, website. Each with violet icon. Website in violet as tappable link.
 7. **"Get Directions" CTA** — Full-width gradient button (violet → violet light). 14px radius, 16px vertical padding. Shadow.
@@ -237,7 +237,7 @@ Same as current Explore screen structure but with updated styling:
 | `FloatingNavBar` | 5-tab floating bottom nav with dot indicator |
 | `WeatherHeroCard` | Gradient card with Lottie animation, temp, suggestion |
 | `PlaceCardHorizontal` | 160x210 photo-forward card for horizontal scroll sections |
-| `PlaceCardFullWidth` | Full-width photo card with gradient overlay for search results |
+| `PlaceCardFullWidth` | Full-width photo card, 160dp image height with gradient overlay, amenity chips below. For search results and "Popular This Week" |
 | `EventCard` | Vertical date block + event info + LIVE badge (for Events feed) |
 | `EventCardHorizontal` | 160x210dp compact event card for horizontal scroll sections (Discover) |
 | `CategoryChip` | Selectable pill chip with icon |
