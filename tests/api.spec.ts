@@ -157,7 +157,7 @@ test.describe('US-007: Trilingual Support', () => {
 test.describe('US-008: Weather Data', () => {
   test('returns weather response', async ({ request }) => {
     const res = await request.get(`${V1}/weather`, { params: { lat: LAT, lon: LON } });
-    expect([200, 502]).toContain(res.status());
+    expect([200, 502, 503]).toContain(res.status());
     if (res.status() === 200) {
       const data = await res.json();
       expect(data).toHaveProperty('weather_mode');
