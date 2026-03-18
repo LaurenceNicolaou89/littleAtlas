@@ -29,7 +29,9 @@ class EventsProvider extends ChangeNotifier {
     final now = DateTime.now();
     return _events
         .where((e) =>
-            e.startDate.isBefore(now) && e.endDate.isAfter(now))
+            e.startDate.isBefore(now) &&
+            e.endDate != null &&
+            e.endDate!.isAfter(now))
         .toList();
   }
 

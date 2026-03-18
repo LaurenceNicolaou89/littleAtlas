@@ -8,28 +8,53 @@ import '../../utils/formatters.dart';
 import '../../utils/launchers.dart';
 import '../../widgets/category_chips.dart';
 
-/// Maps amenity slugs to their display icon and label.
-class _AmenityInfo {
-  final IconData icon;
-  final String label;
-
-  const _AmenityInfo(this.icon, this.label);
-}
-
-const Map<String, _AmenityInfo> _amenityMap = {
-  'changing_table': _AmenityInfo(Icons.baby_changing_station, 'Changing Table'),
-  'high_chair': _AmenityInfo(Icons.chair, 'High Chair'),
-  'kids_menu': _AmenityInfo(Icons.restaurant_menu, 'Kids Menu'),
-  'stroller_access': _AmenityInfo(Icons.accessible, 'Stroller Access'),
-  'fenced_area': _AmenityInfo(Icons.fence, 'Fenced Area'),
-  'parking': _AmenityInfo(Icons.local_parking, 'Parking'),
-  'wheelchair_access': _AmenityInfo(Icons.wheelchair_pickup, 'Wheelchair'),
-  'nursing_room': _AmenityInfo(Icons.child_friendly, 'Nursing Room'),
-  'shade': _AmenityInfo(Icons.umbrella, 'Shade'),
-  'water_fountain': _AmenityInfo(Icons.water_drop, 'Water Fountain'),
-  'toilets': _AmenityInfo(Icons.wc, 'Toilets'),
-  'wifi': _AmenityInfo(Icons.wifi, 'WiFi'),
+/// Maps amenity slugs to their display icon.
+const Map<String, IconData> _amenityIcons = {
+  'changing_table': Icons.baby_changing_station,
+  'high_chair': Icons.chair,
+  'kids_menu': Icons.restaurant_menu,
+  'stroller_access': Icons.accessible,
+  'fenced_area': Icons.fence,
+  'parking': Icons.local_parking,
+  'wheelchair_access': Icons.wheelchair_pickup,
+  'nursing_room': Icons.child_friendly,
+  'shade': Icons.umbrella,
+  'water_fountain': Icons.water_drop,
+  'toilets': Icons.wc,
+  'wifi': Icons.wifi,
 };
+
+/// Returns localized amenity label for the given slug.
+String _amenityLabel(String slug, AppLocalizations l10n) {
+  switch (slug) {
+    case 'changing_table':
+      return l10n.amenityChangingTable;
+    case 'high_chair':
+      return l10n.amenityHighChair;
+    case 'kids_menu':
+      return l10n.amenityKidsMenu;
+    case 'stroller_access':
+      return l10n.amenityStrollerAccess;
+    case 'fenced_area':
+      return l10n.amenityFencedArea;
+    case 'parking':
+      return l10n.amenityParking;
+    case 'wheelchair_access':
+      return l10n.amenityWheelchairAccess;
+    case 'nursing_room':
+      return l10n.amenityNursingRoom;
+    case 'shade':
+      return l10n.amenityShade;
+    case 'water_fountain':
+      return l10n.amenityWaterFountain;
+    case 'toilets':
+      return l10n.amenityToilets;
+    case 'wifi':
+      return l10n.amenityWifi;
+    default:
+      return slug.replaceAll('_', ' ');
+  }
+}
 
 class PlaceDetailScreen extends StatefulWidget {
   final Place place;
@@ -330,32 +355,22 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
   // ── Amenity chips ───────────────────────────────────────────────────
 
   Widget _buildAmenityChips() {
+    final l10n = AppLocalizations.of(context)!;
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: place.amenities.map((slug) {
-        final info = _amenityMap[slug];
-        if (info == null) {
-          return Chip(
-            label: Text(slug.replaceAll('_', ' ')),
-            backgroundColor: LittleAtlasApp.atlasGreenLight,
-            labelStyle: const TextStyle(
-              color: LittleAtlasApp.atlasGreen,
-              fontSize: 12,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            side: BorderSide.none,
-          );
-        }
+        final icon = _amenityIcons[slug];
+        final label = _amenityLabel(slug, l10n);
         return Chip(
-          avatar: Icon(
-            info.icon,
-            size: 16,
-            color: LittleAtlasApp.atlasGreen,
-          ),
-          label: Text(info.label),
+          avatar: icon != null
+              ? Icon(
+                  icon,
+                  size: 16,
+                  color: LittleAtlasApp.atlasGreen,
+                )
+              : null,
+          label: Text(label),
           backgroundColor: LittleAtlasApp.atlasGreenLight,
           labelStyle: const TextStyle(
             color: LittleAtlasApp.atlasGreen,

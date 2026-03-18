@@ -90,5 +90,9 @@
   "amenityFencedArea": "Fenced Area",
   "amenityParking": "Parking",
   "amenityWheelchairAccess": "Wheelchair Access",
-  "amenityToilets": "Toilets"
+  "amenityToilets": "Toilets",
+  "amenityNursingRoom": "Nursing Room",
+  "amenityShade": "Shade",
+  "amenityWaterFountain": "Water Fountain",
+  "amenityWifi": "WiFi"
 }

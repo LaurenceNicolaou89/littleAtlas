@@ -21,13 +21,13 @@ class Weather {
 
   factory Weather.fromJson(Map<String, dynamic> json) {
     return Weather(
-      temp: (json['temp'] as num).toDouble(),
+      temp: (json['temp'] as num?)?.toDouble() ?? 0.0,
       description: json['description'] as String? ?? '',
       icon: json['icon'] as String? ?? '',
-      humidity: json['humidity'] as int? ?? 0,
+      humidity: (json['humidity'] as num?)?.toInt() ?? 0,
       windSpeed: (json['wind_speed'] as num?)?.toDouble() ?? 0.0,
       uvIndex: (json['uv_index'] as num?)?.toDouble() ?? 0.0,
-      mode: _parseMode(json['mode'] as String?),
+      mode: _parseMode(json['weather_mode'] as String?),
     );
   }
 

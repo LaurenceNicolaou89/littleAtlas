@@ -101,6 +101,7 @@ class ApiService {
     String? ageGroup,
     bool? indoor,
     String? q,
+    String? amenities,
   }) async {
     final params = <String, dynamic>{
       'lat': lat,
@@ -111,6 +112,9 @@ class ApiService {
     if (ageGroup != null) params['age_group'] = ageGroup;
     if (indoor != null) params['indoor'] = indoor;
     if (q != null && q.isNotEmpty) params['q'] = q;
+    if (amenities != null && amenities.isNotEmpty) {
+      params['amenities'] = amenities;
+    }
 
     final response = await _dio.get<Map<String, dynamic>>(
       ApiConfig.placesNearby,
@@ -118,8 +122,8 @@ class ApiService {
     );
 
     final data = response.data;
-    if (data != null && data['results'] is List) {
-      return (data['results'] as List<dynamic>)
+    if (data != null && data['places'] is List) {
+      return (data['places'] as List<dynamic>)
           .map((e) => Place.fromJson(e as Map<String, dynamic>))
           .toList();
     }
@@ -162,8 +166,8 @@ class ApiService {
     );
 
     final data = response.data;
-    if (data != null && data['results'] is List) {
-      return (data['results'] as List<dynamic>)
+    if (data != null && data['events'] is List) {
+      return (data['events'] as List<dynamic>)
           .map((e) => Event.fromJson(e as Map<String, dynamic>))
           .toList();
     }
@@ -194,8 +198,8 @@ class ApiService {
     );
 
     final data = response.data;
-    if (data != null && data['results'] is List) {
-      return (data['results'] as List<dynamic>)
+    if (data != null && data['categories'] is List) {
+      return (data['categories'] as List<dynamic>)
           .map((e) => Category.fromJson(e as Map<String, dynamic>))
           .toList();
     }

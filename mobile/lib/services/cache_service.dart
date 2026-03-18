@@ -193,6 +193,7 @@ class CacheService {
       'address': place.address,
       'phone': place.phone,
       'website': place.website,
+      'opening_hours': place.openingHours,
     };
   }
 
@@ -204,7 +205,7 @@ class CacheService {
       'humidity': weather.humidity,
       'wind_speed': weather.windSpeed,
       'uv_index': weather.uvIndex,
-      'mode': weather.mode.name,
+      'weather_mode': weather.mode.name,
     };
   }
 
@@ -213,12 +214,12 @@ class CacheService {
       'id': event.id,
       'title': event.title,
       'description': event.description,
-      'lat': event.lat,
-      'lon': event.lon,
+      if (event.lat != null) 'lat': event.lat,
+      if (event.lon != null) 'lon': event.lon,
       'venue_name': event.venueName,
       'address': event.address,
       'start_date': event.startDate.toIso8601String(),
-      'end_date': event.endDate.toIso8601String(),
+      'end_date': event.endDate?.toIso8601String(),
       'is_indoor': event.isIndoor,
       'age_min': event.ageMin,
       'age_max': event.ageMax,

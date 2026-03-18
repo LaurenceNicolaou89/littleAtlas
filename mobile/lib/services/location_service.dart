@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -30,13 +29,11 @@ class LocationService {
     bool serviceEnabled;
     try {
       serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    } catch (e) {
-      debugPrint('LocationService: failed to check service status: $e');
+    } catch (_) {
       return false;
     }
 
     if (!serviceEnabled) {
-      debugPrint('LocationService: location services are disabled');
       return false;
     }
 
@@ -44,13 +41,11 @@ class LocationService {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        debugPrint('LocationService: permission denied');
         return false;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      debugPrint('LocationService: permission denied forever');
       return false;
     }
 
@@ -76,8 +71,7 @@ class LocationService {
 
       _lastKnownLocation = LatLng(position.latitude, position.longitude);
       return _lastKnownLocation!;
-    } catch (e) {
-      debugPrint('LocationService: error getting location: $e');
+    } catch (_) {
       return _lastKnownLocation ?? cyprusCenter;
     }
   }

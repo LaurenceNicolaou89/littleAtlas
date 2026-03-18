@@ -269,4 +269,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get amenityToilets => 'Туалеты';
+
+  @override
+  String get amenityNursingRoom => 'Комната для кормления';
+
+  @override
+  String get amenityShade => 'Тень';
+
+  @override
+  String get amenityWaterFountain => 'Питьевой фонтанчик';
+
+  @override
+  String get amenityWifi => 'WiFi';
 }

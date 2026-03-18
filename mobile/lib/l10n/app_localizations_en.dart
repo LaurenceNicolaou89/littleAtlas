@@ -268,4 +268,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get amenityToilets => 'Toilets';
+
+  @override
+  String get amenityNursingRoom => 'Nursing Room';
+
+  @override
+  String get amenityShade => 'Shade';
+
+  @override
+  String get amenityWaterFountain => 'Water Fountain';
+
+  @override
+  String get amenityWifi => 'WiFi';
 }

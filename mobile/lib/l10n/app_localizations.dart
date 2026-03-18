@@ -603,6 +603,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Toilets'**
   String get amenityToilets;
+
+  /// No description provided for @amenityNursingRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Nursing Room'**
+  String get amenityNursingRoom;
+
+  /// No description provided for @amenityShade.
+  ///
+  /// In en, this message translates to:
+  /// **'Shade'**
+  String get amenityShade;
+
+  /// No description provided for @amenityWaterFountain.
+  ///
+  /// In en, this message translates to:
+  /// **'Water Fountain'**
+  String get amenityWaterFountain;
+
+  /// No description provided for @amenityWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'WiFi'**
+  String get amenityWifi;
 }
 
 class _AppLocalizationsDelegate

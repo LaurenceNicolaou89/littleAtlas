@@ -61,8 +61,9 @@ class PlacesProvider extends ChangeNotifier {
     final cacheKey = _buildCacheKey(lat, lon);
 
     try {
-      // Use the first selected category for the API call, or the single
-      // selected category for backwards compatibility.
+      // Limitation: the backend 'category' param accepts a single slug only.
+      // When multiple categories are selected, we send the first one to the API
+      // and filter the rest client-side below.
       final categoryParam = _selectedCategories.isNotEmpty
           ? _selectedCategories.first
           : _selectedCategory;
@@ -83,6 +84,9 @@ class PlacesProvider extends ChangeNotifier {
         ageGroup: _selectedAgeGroup,
         indoor: indoorParam,
         q: _searchQuery,
+        amenities: _selectedAmenities.isNotEmpty
+            ? _selectedAmenities.join(',')
+            : null,
       );
 
       // Client-side filtering for multi-category and amenities since

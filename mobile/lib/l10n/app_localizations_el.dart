@@ -268,4 +268,16 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get amenityToilets => 'Τουαλέτες';
+
+  @override
+  String get amenityNursingRoom => 'Δωμάτιο Θηλασμού';
+
+  @override
+  String get amenityShade => 'Σκιά';
+
+  @override
+  String get amenityWaterFountain => 'Βρύση Νερού';
+
+  @override
+  String get amenityWifi => 'WiFi';
 }

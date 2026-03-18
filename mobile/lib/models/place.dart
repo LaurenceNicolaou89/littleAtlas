@@ -14,6 +14,7 @@ class Place {
   final String? address;
   final String? phone;
   final String? website;
+  final Map<String, dynamic>? openingHours;
 
   const Place({
     required this.id,
@@ -31,6 +32,7 @@ class Place {
     this.address,
     this.phone,
     this.website,
+    this.openingHours,
   });
 
   factory Place.fromJson(Map<String, dynamic> json) {
@@ -56,6 +58,7 @@ class Place {
       address: json['address'] as String?,
       phone: json['phone'] as String?,
       website: json['website'] as String?,
+      openingHours: json['opening_hours'] as Map<String, dynamic>?,
     );
   }
 }
