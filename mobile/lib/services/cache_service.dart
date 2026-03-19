@@ -25,7 +25,7 @@ class CacheService {
   /// Events cache expires after 30 minutes.
   static const Duration eventsTtl = Duration(minutes: 30);
 
-  // Finding #10: open boxes once in init() and store references.
+  // Open boxes once in init() and store references.
   late final Box<String> _placesBox;
   late final Box<String> _weatherBox;
   late final Box<String> _categoriesBox;
@@ -95,7 +95,7 @@ class CacheService {
     return Weather.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
-  // ── Events (Finding #11) ──────────────────────────────────────────
+  // ── Events ──────────────────────────────────────────────────────────
 
   Future<void> saveEvents(String key, List<Event> events) async {
     await _ensureInitialized();
@@ -147,7 +147,7 @@ class CacheService {
 
   final Map<String, DateTime> _timestamps = {};
 
-  // Finding #10: fixed dual DateTime.now() bug — use a single timestamp.
+  // Use a single timestamp to avoid dual DateTime.now() inconsistency.
   void _setTimestamp(String key) {
     final now = DateTime.now();
     _timestamps[key] = now;
@@ -225,6 +225,7 @@ class CacheService {
       'age_max': event.ageMax,
       'source_url': event.sourceUrl,
       'distance_m': event.distanceM,
+      'event_type': event.eventType,
     };
   }
 }

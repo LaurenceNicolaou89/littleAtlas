@@ -194,7 +194,7 @@ class PlacesProvider extends ChangeNotifier {
   }
 
   /// Applies all filter values at once and triggers a single refetch
-  /// (Finding #3 — avoids 5 sequential API calls).
+  /// Applies all filters in a single batch to avoid sequential API calls.
   void applyFilters(FilterResult result) {
     _distanceRadius = result.distance;
     _selectedCategories = result.categories;

@@ -1,4 +1,4 @@
-/// Shared formatting utilities used across place and event widgets.
+// Shared formatting utilities used across place and event widgets.
 
 /// Returns a human-readable age range string, e.g. "Ages 3-5".
 String formatAgeRange(int? min, int? max) {

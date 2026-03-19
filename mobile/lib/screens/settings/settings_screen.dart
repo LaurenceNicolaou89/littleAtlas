@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../app.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/settings_provider.dart';
+import '../../theme/design_tokens.dart';
+import '../../widgets/info_pill.dart';
+import '../../widgets/language_tile.dart';
+import '../../widgets/settings_card.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -15,160 +19,169 @@ class SettingsScreen extends StatelessWidget {
     final settings = context.watch<SettingsProvider>();
     final selectedLang = settings.locale.languageCode;
 
+    // Resolve current language display name
+    final currentLanguageName = switch (selectedLang) {
+      'el' => 'Ελληνικά',
+      'ru' => 'Русский',
+      _ => 'English',
+    };
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settings)),
-      body: ListView(
-        children: [
-          const SizedBox(height: 16),
-
-          // ── Language section header ──
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              l10n.language,
-              style: const TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 20,
-                fontWeight: FontWeight.w600, // SemiBold – H2
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // ── Language card ──
-          Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12),
-            elevation: 1,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                _LanguageTile(
-                  flag: '\u{1F1EC}\u{1F1E7}', // GB flag
-                  title: 'English',
-                  langCode: 'en',
-                  isSelected: selectedLang == 'en',
-                  onTap: () => settings.changeLanguage('en'),
-                ),
-                const Divider(height: 1),
-                _LanguageTile(
-                  flag: '\u{1F1EC}\u{1F1F7}', // GR flag
-                  title: '\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac',
-                  langCode: 'el',
-                  isSelected: selectedLang == 'el',
-                  onTap: () => settings.changeLanguage('el'),
-                ),
-                const Divider(height: 1),
-                _LanguageTile(
-                  flag: '\u{1F1F7}\u{1F1FA}', // RU flag
-                  title: '\u0420\u0443\u0441\u0441\u043a\u0438\u0439',
-                  langCode: 'ru',
-                  isSelected: selectedLang == 'ru',
-                  onTap: () => settings.changeLanguage('ru'),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // ── About section header ──
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              l10n.about,
-              style: const TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 20,
-                fontWeight: FontWeight.w600, // SemiBold – H2
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // ── About card ──
-          Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12),
-            elevation: 1,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                // Version
-                ListTile(
-                  leading: const Icon(Icons.info_outline, color: LittleAtlasApp.atlasGreen),
-                  title: Text(l10n.version),
-                  subtitle: const Text('1.0.0'),
-                ),
-                const Divider(height: 1),
-
-                // Data Sources
-                ListTile(
-                  leading: const Icon(Icons.storage_outlined, color: LittleAtlasApp.atlasGreen),
-                  title: Text(l10n.dataSources),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _showDataSourcesDialog(context, l10n),
-                ),
-                const Divider(height: 1),
-
-                // Privacy Policy
-                ListTile(
-                  leading: const Icon(Icons.privacy_tip_outlined, color: LittleAtlasApp.atlasGreen),
-                  title: Text(l10n.privacyPolicy),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _launchUrl('https://littleatlas.app/privacy'),
-                ),
-                const Divider(height: 1),
-
-                // Terms of Service
-                ListTile(
-                  leading: const Icon(Icons.description_outlined, color: LittleAtlasApp.atlasGreen),
-                  title: Text(l10n.termsOfService),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _launchUrl('https://littleatlas.app/terms'),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  // ── Helpers ──────────────────────────────────────────────────────────
-
-  void _showDataSourcesDialog(BuildContext context, AppLocalizations l10n) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.dataSources),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           children: [
-            Text(l10n.dataSourcesDescription),
+            const SizedBox(height: 24),
+
+            // ── Header ──────────────────────────────────────────────
+            Text(
+              l10n.settings,
+              style: GoogleFonts.nunito(
+                fontWeight: FontWeight.w700,
+                fontSize: 22,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Make Little Atlas yours',
+              style: GoogleFonts.nunito(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // ── Language card ───────────────────────────────────────
+            SettingsCard(
+              icon: Icons.language,
+              iconGradient: const [AppColors.primary, AppColors.primaryLight],
+              title: l10n.language,
+              subtitle: 'Currently: $currentLanguageName',
+              child: Row(
+                children: [
+                  Expanded(
+                    child: LanguageTile(
+                      flag: '\u{1F1EC}\u{1F1E7}',
+                      languageName: 'English',
+                      isSelected: selectedLang == 'en',
+                      onTap: () => settings.changeLanguage('en'),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: LanguageTile(
+                      flag: '\u{1F1EC}\u{1F1F7}',
+                      languageName: 'Ελληνικά',
+                      isSelected: selectedLang == 'el',
+                      onTap: () => settings.changeLanguage('el'),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: LanguageTile(
+                      flag: '\u{1F1F7}\u{1F1FA}',
+                      languageName: 'Русский',
+                      isSelected: selectedLang == 'ru',
+                      onTap: () => settings.changeLanguage('ru'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
-            _DataSourceRow(label: l10n.openStreetMap),
-            _DataSourceRow(label: l10n.googlePlaces),
-            _DataSourceRow(label: l10n.openWeatherMap),
-            _DataSourceRow(label: l10n.communityContributions),
+
+            // ── Data Sources card ───────────────────────────────────
+            SettingsCard(
+              icon: Icons.bar_chart,
+              iconGradient: const [
+                AppColors.aquaTeal,
+                Color(0xFF81ECEC),
+              ],
+              title: l10n.dataSources,
+              subtitle: 'Where our info comes from',
+              child: Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  InfoPill(
+                    label: 'OpenStreetMap',
+                    backgroundColor: AppColors.aquaTeal.withAlpha(30),
+                    textColor: AppColors.aquaTeal,
+                  ),
+                  InfoPill(
+                    label: 'Google Places',
+                    backgroundColor: AppColors.primary.withAlpha(30),
+                    textColor: AppColors.primary,
+                  ),
+                  InfoPill(
+                    label: 'OpenWeather',
+                    backgroundColor: AppColors.honeyGold.withAlpha(50),
+                    textColor: const Color(0xFF6C5100),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ── Legal card ──────────────────────────────────────────
+            SettingsCard(
+              icon: Icons.description,
+              iconGradient: const [
+                AppColors.honeyGold,
+                Color(0xFFFFEAA7),
+              ],
+              title: 'Legal',
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _LegalTile(
+                      label: l10n.privacyPolicy,
+                      onTap: () =>
+                          _launchUrl('https://littleatlas.app/privacy'),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: _LegalTile(
+                      label: l10n.termsOfService,
+                      onTap: () =>
+                          _launchUrl('https://littleatlas.app/terms'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // ── Branding footer ─────────────────────────────────────
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    'Little Atlas',
+                    style: GoogleFonts.nunito(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'v2.0.0 \u00B7 Made with \u2665 in Cyprus',
+                    style: GoogleFonts.nunito(
+                      fontSize: 11,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 80),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              l10n.close,
-              style: const TextStyle(color: LittleAtlasApp.atlasGreen),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -181,54 +194,41 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-// ── Language tile ──────────────────────────────────────────────────────
+// ── Legal tile ────────────────────────────────────────────────────────
 
-class _LanguageTile extends StatelessWidget {
-  final String flag;
-  final String title;
-  final String langCode;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _LanguageTile({
-    required this.flag,
-    required this.title,
-    required this.langCode,
-    required this.isSelected,
+class _LegalTile extends StatelessWidget {
+  const _LegalTile({
+    required this.label,
     required this.onTap,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      tileColor: isSelected ? LittleAtlasApp.atlasGreenLight : null,
-      leading: Text(flag, style: const TextStyle(fontSize: 24)),
-      title: Text(title),
-      trailing: isSelected
-          ? const Icon(Icons.check, color: LittleAtlasApp.atlasGreen)
-          : null,
-      onTap: onTap,
-    );
-  }
-}
-
-// ── Data source row ───────────────────────────────────────────────────
-
-class _DataSourceRow extends StatelessWidget {
   final String label;
-
-  const _DataSourceRow({required this.label});
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          const Icon(Icons.circle, size: 6, color: LittleAtlasApp.atlasGreen),
-          const SizedBox(width: 12),
-          Expanded(child: Text(label)),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.md,
+          horizontal: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8F9FA),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: GoogleFonts.nunito(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
     );
   }

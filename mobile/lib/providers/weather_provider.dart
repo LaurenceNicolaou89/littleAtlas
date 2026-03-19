@@ -21,7 +21,7 @@ class WeatherProvider extends ChangeNotifier {
   /// Returns the current weather mode, defaulting to outdoor.
   WeatherMode get weatherMode => _weather?.mode ?? WeatherMode.outdoor;
 
-  // Finding #15: Removed weatherBannerText and weatherBannerColor —
+  // Removed weatherBannerText and weatherBannerColor —
   // the WeatherBanner widget computes its own text and gradients.
 
   // ── Fetch ───────────────────────────────────────────────────────────

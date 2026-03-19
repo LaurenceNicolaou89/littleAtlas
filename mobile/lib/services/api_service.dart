@@ -135,7 +135,6 @@ class ApiService {
       '${ApiConfig.placeDetail}/$id',
     );
 
-    // Finding #6: null-check before force-unwrap.
     final data = response.data;
     if (data == null) {
       throw Exception('Empty response when fetching place $id');
@@ -151,6 +150,7 @@ class ApiService {
     String? dateFrom,
     String? dateTo,
     String? ageGroup,
+    String? eventType,
   }) async {
     final params = <String, dynamic>{
       'lat': lat,
@@ -159,6 +159,7 @@ class ApiService {
     if (dateFrom != null) params['date_from'] = dateFrom;
     if (dateTo != null) params['date_to'] = dateTo;
     if (ageGroup != null) params['age_group'] = ageGroup;
+    if (eventType != null) params['event_type'] = eventType;
 
     final response = await _dio.get<Map<String, dynamic>>(
       ApiConfig.eventsUpcoming,
@@ -182,7 +183,6 @@ class ApiService {
       queryParameters: {'lat': lat, 'lon': lon},
     );
 
-    // Finding #6: null-check before force-unwrap.
     final data = response.data;
     if (data == null) {
       throw Exception('Empty response when fetching weather');

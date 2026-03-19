@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:little_atlas/app.dart';
 import 'package:little_atlas/l10n/app_localizations.dart';
+import 'package:little_atlas/theme/design_tokens.dart';
 
 /// A modal bottom sheet that lets users set search filters for places.
 ///
@@ -127,7 +127,7 @@ class _FilterSheetState extends State<FilterSheet> {
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
-            color: LittleAtlasApp.surface,
+            color: AppColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
           child: Column(
@@ -195,7 +195,7 @@ class _FilterSheetState extends State<FilterSheet> {
                   child: ElevatedButton(
                     onPressed: _apply,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: LittleAtlasApp.atlasGreen,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -238,7 +238,7 @@ class _FilterSheetState extends State<FilterSheet> {
           title: Text(opt.label),
           value: opt.meters,
           groupValue: _distance,
-          activeColor: LittleAtlasApp.atlasGreen,
+          activeColor: AppColors.primary,
           dense: true,
           onChanged: (value) => setState(() => _distance = value),
         );
@@ -252,7 +252,7 @@ class _FilterSheetState extends State<FilterSheet> {
         return CheckboxListTile(
           title: Text(opt.label),
           value: _categories.contains(opt.value),
-          activeColor: LittleAtlasApp.atlasGreen,
+          activeColor: AppColors.primary,
           dense: true,
           onChanged: (checked) {
             setState(() {
@@ -275,7 +275,7 @@ class _FilterSheetState extends State<FilterSheet> {
           title: Text(opt.label),
           value: opt.value,
           groupValue: _ageGroup,
-          activeColor: LittleAtlasApp.atlasGreen,
+          activeColor: AppColors.primary,
           dense: true,
           onChanged: (value) => setState(() => _ageGroup = value),
         );
@@ -290,7 +290,7 @@ class _FilterSheetState extends State<FilterSheet> {
           title: Text(opt.label),
           value: opt.value,
           groupValue: _placeType,
-          activeColor: LittleAtlasApp.atlasGreen,
+          activeColor: AppColors.primary,
           dense: true,
           onChanged: (value) => setState(() => _placeType = value),
         );
@@ -304,7 +304,7 @@ class _FilterSheetState extends State<FilterSheet> {
         return CheckboxListTile(
           title: Text(opt.label),
           value: _amenities.contains(opt.value),
-          activeColor: LittleAtlasApp.atlasGreen,
+          activeColor: AppColors.primary,
           dense: true,
           onChanged: (checked) {
             setState(() {

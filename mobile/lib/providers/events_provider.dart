@@ -24,6 +24,17 @@ class EventsProvider extends ChangeNotifier {
   String? get error => _error;
   String get timeFilter => _timeFilter;
 
+  List<Event> get cinemaEvents =>
+      _events.where((e) => e.eventType == 'cinema').toList();
+  List<Event> get theatreEvents =>
+      _events.where((e) => e.eventType == 'theatre').toList();
+  List<Event> get workshopEvents =>
+      _events.where((e) => e.eventType == 'workshop').toList();
+  List<Event> get festivalEvents =>
+      _events.where((e) => e.eventType == 'festival').toList();
+  List<Event> get generalEvents =>
+      _events.where((e) => e.eventType == null || e.eventType == 'general').toList();
+
   /// Events that are currently happening (startDate <= now <= endDate).
   List<Event> get happeningNow {
     final now = DateTime.now();
@@ -55,7 +66,7 @@ class EventsProvider extends ChangeNotifier {
         dateTo: dateRange.$2,
       );
 
-      // Finding #11: cache events.
+      // Cache events for offline use.
       await _cacheService.saveEvents(cacheKey, _events);
     } catch (e) {
       _error = e.toString();

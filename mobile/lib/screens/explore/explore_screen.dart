@@ -30,7 +30,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
   final MapController _mapController = MapController();
 
   LatLng _currentCenter = LocationService.cyprusCenter;
-  bool _initialLocationLoaded = false;
   Place? _selectedPlace;
 
   Timer? _mapMoveDebounce;
@@ -54,7 +53,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
     setState(() {
       _currentCenter = location;
-      _initialLocationLoaded = true;
     });
 
     _mapController.move(location, 13);

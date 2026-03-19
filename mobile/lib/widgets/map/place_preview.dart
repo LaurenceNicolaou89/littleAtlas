@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:little_atlas/app.dart';
 import 'package:little_atlas/models/place.dart';
+import 'package:little_atlas/theme/design_tokens.dart';
 import 'package:little_atlas/utils/formatters.dart';
 import 'package:little_atlas/widgets/category_chips.dart';
 
@@ -58,7 +58,7 @@ class PlacePreview extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: LittleAtlasApp.textPrimary,
+                        color: AppColors.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -70,7 +70,7 @@ class PlacePreview extends StatelessWidget {
                       child: const Icon(
                         Icons.close,
                         size: 16,
-                        color: LittleAtlasApp.textTertiary,
+                        color: AppColors.textTertiary,
                       ),
                     ),
                 ],
@@ -91,14 +91,14 @@ class PlacePreview extends StatelessWidget {
                     const Icon(
                       Icons.near_me,
                       size: 12,
-                      color: LittleAtlasApp.textTertiary,
+                      color: AppColors.textTertiary,
                     ),
                     const SizedBox(width: 2),
                     Text(
                       formatDistance(place.distanceM),
                       style: const TextStyle(
                         fontSize: 12,
-                        color: LittleAtlasApp.textTertiary,
+                        color: AppColors.textTertiary,
                       ),
                     ),
                   ],

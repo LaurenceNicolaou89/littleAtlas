@@ -37,11 +37,11 @@ class Place {
 
   factory Place.fromJson(Map<String, dynamic> json) {
     return Place(
-      id: json['id'] as int,
-      name: json['name'] as String,
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? '',
       description: json['description'] as String? ?? '',
-      lat: (json['lat'] as num).toDouble(),
-      lon: (json['lon'] as num).toDouble(),
+      lat: (json['lat'] as num?)?.toDouble() ?? 0,
+      lon: (json['lon'] as num?)?.toDouble() ?? 0,
       category: json['category'] as String? ?? '',
       distanceM: (json['distance_m'] as num?)?.toDouble(),
       isIndoor: json['is_indoor'] as bool? ?? false,
