@@ -280,4 +280,79 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get amenityWifi => 'WiFi';
+
+  @override
+  String get discover => 'Ανακαλύψτε';
+
+  @override
+  String get goodMorning => 'Καλημέρα!';
+
+  @override
+  String get goodAfternoon => 'Καλό απόγευμα!';
+
+  @override
+  String get goodEvening => 'Καλησπέρα!';
+
+  @override
+  String get nearYou => 'Κοντά σας';
+
+  @override
+  String get categories => 'Κατηγορίες';
+
+  @override
+  String get happeningToday => 'Συμβαίνει σήμερα';
+
+  @override
+  String get seeAll => 'Δείτε όλα';
+
+  @override
+  String get whatsOn => 'Τι παίζει';
+
+  @override
+  String get cinema => 'Σινεμά';
+
+  @override
+  String get theatre => 'Θέατρο & Παραστάσεις';
+
+  @override
+  String get workshops => 'Εργαστήρια';
+
+  @override
+  String get festivals => 'Φεστιβάλ';
+
+  @override
+  String get allEvents => 'Όλες οι εκδηλώσεις';
+
+  @override
+  String get showOnMap => 'Εμφάνιση στο χάρτη';
+
+  @override
+  String get showtime => 'Ώρα προβολής';
+
+  @override
+  String get noEventsThisWeek => 'Δεν υπάρχουν εκδηλώσεις αυτή την εβδομάδα';
+
+  @override
+  String get map => 'Χάρτης';
+
+  @override
+  String get greetingMorning => 'Καλημέρα';
+
+  @override
+  String get greetingAfternoon => 'Καλό απόγευμα';
+
+  @override
+  String get greetingEvening => 'Καλό βράδυ';
+
+  @override
+  String get weatherSuggestionOutdoor => 'Τέλεια μέρα για παραλία!';
+
+  @override
+  String get weatherSuggestionIndoor => 'Ζεστή μέρα μέσα! Δοκιμάστε ένα μουσείο';
+
+  @override
+  String get weatherSuggestionCaution => 'Μείνετε δροσεροί — διασκέδαση μέσα!';
+
+  @override
+  String get popularThisWeek => 'Δημοφιλή Αυτή την Εβδομάδα';
 }

@@ -280,4 +280,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get amenityWifi => 'WiFi';
+
+  @override
+  String get discover => 'Discover';
+
+  @override
+  String get goodMorning => 'Good morning!';
+
+  @override
+  String get goodAfternoon => 'Good afternoon!';
+
+  @override
+  String get goodEvening => 'Good evening!';
+
+  @override
+  String get nearYou => 'Near You';
+
+  @override
+  String get categories => 'Categories';
+
+  @override
+  String get happeningToday => 'Happening Today';
+
+  @override
+  String get seeAll => 'See All';
+
+  @override
+  String get whatsOn => 'What\'s On';
+
+  @override
+  String get cinema => 'Cinema';
+
+  @override
+  String get theatre => 'Theatre & Plays';
+
+  @override
+  String get workshops => 'Workshops';
+
+  @override
+  String get festivals => 'Festivals';
+
+  @override
+  String get allEvents => 'All Events';
+
+  @override
+  String get showOnMap => 'Show on Map';
+
+  @override
+  String get showtime => 'Showtime';
+
+  @override
+  String get noEventsThisWeek => 'No events this week';
+
+  @override
+  String get map => 'Map';
+
+  @override
+  String get greetingMorning => 'Good morning';
+
+  @override
+  String get greetingAfternoon => 'Good afternoon';
+
+  @override
+  String get greetingEvening => 'Good evening';
+
+  @override
+  String get weatherSuggestionOutdoor => 'Perfect day for the beach!';
+
+  @override
+  String get weatherSuggestionIndoor => 'Cozy indoor day! Try a museum';
+
+  @override
+  String get weatherSuggestionCaution => 'Stay cool — indoor fun today!';
+
+  @override
+  String get popularThisWeek => 'Popular This Week';
 }

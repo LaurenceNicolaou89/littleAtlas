@@ -281,4 +281,79 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get amenityWifi => 'WiFi';
+
+  @override
+  String get discover => 'Открыть';
+
+  @override
+  String get goodMorning => 'Доброе утро!';
+
+  @override
+  String get goodAfternoon => 'Добрый день!';
+
+  @override
+  String get goodEvening => 'Добрый вечер!';
+
+  @override
+  String get nearYou => 'Рядом с вами';
+
+  @override
+  String get categories => 'Категории';
+
+  @override
+  String get happeningToday => 'Сегодня';
+
+  @override
+  String get seeAll => 'Показать все';
+
+  @override
+  String get whatsOn => 'Что происходит';
+
+  @override
+  String get cinema => 'Кино';
+
+  @override
+  String get theatre => 'Театр и спектакли';
+
+  @override
+  String get workshops => 'Мастер-классы';
+
+  @override
+  String get festivals => 'Фестивали';
+
+  @override
+  String get allEvents => 'Все события';
+
+  @override
+  String get showOnMap => 'Показать на карте';
+
+  @override
+  String get showtime => 'Сеанс';
+
+  @override
+  String get noEventsThisWeek => 'На этой неделе нет событий';
+
+  @override
+  String get map => 'Карта';
+
+  @override
+  String get greetingMorning => 'Доброе утро';
+
+  @override
+  String get greetingAfternoon => 'Добрый день';
+
+  @override
+  String get greetingEvening => 'Добрый вечер';
+
+  @override
+  String get weatherSuggestionOutdoor => 'Идеальный день для пляжа!';
+
+  @override
+  String get weatherSuggestionIndoor => 'Уютный день дома! Попробуйте музей';
+
+  @override
+  String get weatherSuggestionCaution => 'Оставайтесь в прохладе — развлечения в помещении!';
+
+  @override
+  String get popularThisWeek => 'Популярное на этой неделе';
 }

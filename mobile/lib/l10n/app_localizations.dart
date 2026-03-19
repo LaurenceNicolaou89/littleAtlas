@@ -627,6 +627,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'WiFi'**
   String get amenityWifi;
+
+  /// No description provided for @discover.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get discover;
+
+  /// No description provided for @goodMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning!'**
+  String get goodMorning;
+
+  /// No description provided for @goodAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon!'**
+  String get goodAfternoon;
+
+  /// No description provided for @goodEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening!'**
+  String get goodEvening;
+
+  /// No description provided for @nearYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Near You'**
+  String get nearYou;
+
+  /// No description provided for @categories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get categories;
+
+  /// No description provided for @happeningToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Happening Today'**
+  String get happeningToday;
+
+  /// No description provided for @seeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See All'**
+  String get seeAll;
+
+  /// No description provided for @whatsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s On'**
+  String get whatsOn;
+
+  /// No description provided for @cinema.
+  ///
+  /// In en, this message translates to:
+  /// **'Cinema'**
+  String get cinema;
+
+  /// No description provided for @theatre.
+  ///
+  /// In en, this message translates to:
+  /// **'Theatre & Plays'**
+  String get theatre;
+
+  /// No description provided for @workshops.
+  ///
+  /// In en, this message translates to:
+  /// **'Workshops'**
+  String get workshops;
+
+  /// No description provided for @festivals.
+  ///
+  /// In en, this message translates to:
+  /// **'Festivals'**
+  String get festivals;
+
+  /// No description provided for @allEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'All Events'**
+  String get allEvents;
+
+  /// No description provided for @showOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on Map'**
+  String get showOnMap;
+
+  /// No description provided for @showtime.
+  ///
+  /// In en, this message translates to:
+  /// **'Showtime'**
+  String get showtime;
+
+  /// No description provided for @noEventsThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'No events this week'**
+  String get noEventsThisWeek;
+
+  /// No description provided for @map.
+  ///
+  /// In en, this message translates to:
+  /// **'Map'**
+  String get map;
+
+  /// No description provided for @greetingMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get greetingMorning;
+
+  /// No description provided for @greetingAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get greetingAfternoon;
+
+  /// No description provided for @greetingEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get greetingEvening;
+
+  /// No description provided for @weatherSuggestionOutdoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect day for the beach!'**
+  String get weatherSuggestionOutdoor;
+
+  /// No description provided for @weatherSuggestionIndoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Cozy indoor day! Try a museum'**
+  String get weatherSuggestionIndoor;
+
+  /// No description provided for @weatherSuggestionCaution.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay cool — indoor fun today!'**
+  String get weatherSuggestionCaution;
+
+  /// No description provided for @popularThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular This Week'**
+  String get popularThisWeek;
 }
 
 class _AppLocalizationsDelegate
