@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../l10n/app_localizations.dart';
+import '../../theme/design_tokens.dart';
+import '../../widgets/floating_nav_bar.dart';
+import '../discover/discover_screen.dart';
 import '../events/events_screen.dart';
 import '../explore/explore_screen.dart';
 import '../search/search_screen.dart';
@@ -9,51 +11,59 @@ import '../settings/settings_screen.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  /// Switches to the given tab index from anywhere below the HomeScreen.
+  static void switchTab(BuildContext context, int index) {
+    final state = context.findAncestorStateOfType<HomeScreenState>();
+    state?.switchToTab(index);
+  }
+
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
+  /// Programmatically switch to the given tab index.
+  void switchToTab(int index) {
+    setState(() => _currentIndex = index);
+  }
+
   final List<Widget> _screens = const [
-    ExploreScreen(),
+    DiscoverScreen(),
     SearchScreen(),
     EventsScreen(),
+    ExploreScreen(),
     SettingsScreen(),
   ];
 
+  void _onTabTapped(int index) {
+    setState(() => _currentIndex = index);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.explore_outlined),
-            activeIcon: const Icon(Icons.explore),
-            label: l10n.explore,
+      backgroundColor: AppColors.background,
+      body: Stack(
+        children: [
+          // Tab content with bottom padding so it doesn't hide behind nav bar
+          Padding(
+            padding: const EdgeInsets.only(bottom: 80),
+            child: IndexedStack(
+              index: _currentIndex,
+              children: _screens,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.search_outlined),
-            activeIcon: const Icon(Icons.search),
-            label: l10n.search,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.event_outlined),
-            activeIcon: const Icon(Icons.event),
-            label: l10n.events,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.settings_outlined),
-            activeIcon: const Icon(Icons.settings),
-            label: l10n.settings,
+          // Floating navigation bar
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: FloatingNavBar(
+              currentIndex: _currentIndex,
+              onTap: _onTabTapped,
+            ),
           ),
         ],
       ),
