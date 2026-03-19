@@ -10,6 +10,7 @@ import redis.asyncio as aioredis
 
 from config import settings
 from crawlers.constants import CYPRUS_CITIES
+from services.weather_utils import calculate_weather_mode
 
 logger = logging.getLogger(__name__)
 
@@ -17,32 +18,6 @@ logger = logging.getLogger(__name__)
 WEATHER_CACHE_TTL = 1800
 
 OPENWEATHERMAP_URL = "https://api.openweathermap.org/data/2.5/weather"
-
-
-def _calculate_weather_mode(
-    temp: float | None,
-    rain: float,
-    wind_speed_kmh: float,
-    uv_index: float | None,
-) -> str:
-    """Determine weather mode per business-logic.md decision tree.
-
-    Returns one of: "indoor", "caution", "outdoor".
-    """
-    if rain > 0:
-        return "indoor"
-    if temp is not None:
-        if temp < 10:
-            return "indoor"
-        if temp > 38:
-            return "indoor"
-    if wind_speed_kmh > 50:
-        return "indoor"
-    if uv_index is not None and uv_index >= 8:
-        return "caution"
-    if temp is not None and 10 <= temp <= 15:
-        return "caution"
-    return "outdoor"
 
 
 async def sync_weather(redis: aioredis.Redis) -> int:
@@ -85,7 +60,7 @@ async def sync_weather(redis: aioredis.Redis) -> int:
                     wind_speed_kmh = (wind_speed_ms * 3.6) if wind_speed_ms is not None else 0.0
                     rain_1h = rain_data.get("1h", 0.0)
 
-                    weather_mode = _calculate_weather_mode(
+                    weather_mode = calculate_weather_mode(
                         temp=temp,
                         rain=rain_1h,
                         wind_speed_kmh=wind_speed_kmh,

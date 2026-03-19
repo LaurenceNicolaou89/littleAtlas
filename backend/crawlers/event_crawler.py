@@ -123,7 +123,7 @@ def _load_sources() -> list[dict[str, Any]]:
     """Load event source configurations."""
     if CONFIG_FILE.exists():
         try:
-            with open(CONFIG_FILE) as f:
+            with open(CONFIG_FILE, encoding="utf-8") as f:
                 sources = json.load(f)
                 logger.info("Loaded %d event sources from %s", len(sources), CONFIG_FILE)
                 return sources
@@ -142,6 +142,7 @@ def _resolve_json_path(data: Any, path: str) -> Any:
         elif isinstance(current, list) and part.isdigit():
             current = current[int(part)]
         else:
+            logger.debug("JSON path '%s' not found in data", path)
             return None
         if current is None:
             return None
@@ -181,6 +182,9 @@ class EventCrawler(BaseCrawler):
 
         source_id = _generate_source_id(title, date_str, venue)
         coords = _geocode_venue(venue)
+
+        if description and len(description) > 2000:
+            logger.warning("Event description truncated from %d chars", len(description))
 
         return {
             "title_en": title,
@@ -291,6 +295,7 @@ class EventCrawler(BaseCrawler):
             existing.description_en = data["description_en"]
             existing.venue_name = data["venue_name"]
             existing.start_date = data["start_date"]
+            existing.event_type = data.get("event_type")
             if location:
                 existing.location = location
         else:
@@ -302,6 +307,7 @@ class EventCrawler(BaseCrawler):
                 location=location,
                 source_url=data.get("source_url", ""),
                 source="web",
+                event_type=data.get("event_type"),
             )
             self.db.add(event)
 

@@ -348,7 +348,8 @@ class AppLocalizationsEl extends AppLocalizations {
   String get weatherSuggestionOutdoor => 'Τέλεια μέρα για παραλία!';
 
   @override
-  String get weatherSuggestionIndoor => 'Ζεστή μέρα μέσα! Δοκιμάστε ένα μουσείο';
+  String get weatherSuggestionIndoor =>
+      'Ζεστή μέρα μέσα! Δοκιμάστε ένα μουσείο';
 
   @override
   String get weatherSuggestionCaution => 'Μείνετε δροσεροί — διασκέδαση μέσα!';

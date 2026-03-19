@@ -173,9 +173,7 @@ class EntityResolver:
         """Find and merge cross-source duplicates within 100m with similar names."""
         merged_count = 0
 
-        # TODO: This loads all places into memory. For Cyprus-only scope this is
-        # acceptable, but if the dataset grows significantly this should be
-        # refactored to use batched/streaming reads.
+        # Loads all places into memory — acceptable for Cyprus-only dataset (~10k places)
         result = await self.db.execute(
             select(Place).where(Place.source.in_(["osm", "google", "manual"]))
         )

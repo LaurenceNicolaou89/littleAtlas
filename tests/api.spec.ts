@@ -228,6 +228,44 @@ test.describe('US-012: Pagination', () => {
   });
 });
 
+test.describe('Photo Proxy', () => {
+  test('returns 503 when Google API key is not set', async ({ request }) => {
+    const res = await request.get(`${V1}/photos/fake_reference`);
+    expect(res.status()).toBe(503);
+  });
+});
+
+test.describe('Event Sub-Types', () => {
+  test('filters by cinema type', async ({ request }) => {
+    const res = await request.get(`${V1}/events`, {
+      params: { lat: LAT, lon: LON, radius: 50000, event_type: 'cinema' }
+    });
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    for (const event of body.events) {
+      expect(event.event_type).toBe('cinema');
+    }
+  });
+
+  test('filters by theatre type', async ({ request }) => {
+    const res = await request.get(`${V1}/events`, {
+      params: { lat: LAT, lon: LON, radius: 50000, event_type: 'theatre' }
+    });
+    expect(res.status()).toBe(200);
+  });
+
+  test('returns event_type field in response', async ({ request }) => {
+    const res = await request.get(`${V1}/events`, {
+      params: { lat: LAT, lon: LON, radius: 50000 }
+    });
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    for (const event of body.events) {
+      expect(event).toHaveProperty('event_type');
+    }
+  });
+});
+
 test.describe('Input Validation', () => {
   test('rejects missing lat/lon', async ({ request }) => {
     const res = await request.get(`${V1}/places`);

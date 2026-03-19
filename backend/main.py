@@ -10,7 +10,7 @@ from slowapi.util import get_remote_address
 
 from config import settings
 from db.database import engine
-from api.routes import health, places, events, weather, categories
+from api.routes import health, places, events, weather, categories, photos
 from crawlers.scheduler import start_scheduler, stop_scheduler
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 if settings.ENVIRONMENT == "production" and settings.CORS_ORIGINS:
     allowed_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
 else:
-    allowed_origins = ["*"]
+    allowed_origins = ["http://localhost:3000", "http://localhost:8080"]
 
 # allow_credentials must be False when allow_origins is ["*"] per CORS spec
 app.add_middleware(
@@ -82,3 +82,4 @@ app.include_router(places.router, prefix="/api/v1")
 app.include_router(events.router, prefix="/api/v1")
 app.include_router(weather.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
+app.include_router(photos.router, prefix="/api/v1")

@@ -43,6 +43,7 @@ class Event(Base):
     # Source
     source_url: Mapped[str] = mapped_column(String(512), nullable=True)
     source: Mapped[str] = mapped_column(String(64), nullable=False, default="manual")
+    event_type: Mapped[str | None] = mapped_column(String(50), nullable=True, default=None)
 
     # Timestamps
     created_at: Mapped[datetime.datetime] = mapped_column(

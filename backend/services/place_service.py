@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from fastapi import HTTPException
 from geoalchemy2 import functions as geo_func
 from sqlalchemy import select, func, cast, Float, or_
@@ -10,6 +12,7 @@ from models.place import Place
 from models.category import Category
 from schemas.place import PlaceResponse
 from services.common import localized, resolve_age_range
+from services.geo_utils import extract_lat, extract_lon
 
 
 def _escape_like(value: str) -> str:
@@ -48,8 +51,8 @@ class PlaceService:
         ).label("distance_m")
 
         # Extract lat/lon in the main SELECT to avoid N+1 per-row queries
-        place_lat = func.ST_Y(func.ST_GeomFromWKB(Place.location)).label("place_lat")
-        place_lon = func.ST_X(func.ST_GeomFromWKB(Place.location)).label("place_lon")
+        place_lat = extract_lat(Place.location).label("place_lat")
+        place_lon = extract_lon(Place.location).label("place_lon")
 
         # Build base query with all WHERE clauses first
         stmt = (
@@ -76,7 +79,7 @@ class PlaceService:
         if amenities is not None:
             amenity_list = [a.strip() for a in amenities.split(",") if a.strip()]
             for amenity in amenity_list:
-                stmt = stmt.where(Place.amenities.op("@>")(func.cast(f'["{amenity}"]', Place.amenities.type)))
+                stmt = stmt.where(Place.amenities.op("@>")(func.cast(json.dumps([amenity]), Place.amenities.type)))
 
         if q is not None:
             escaped = _escape_like(q)
@@ -125,8 +128,8 @@ class PlaceService:
 
     async def get_by_id(self, place_id: int, lang: str = "en") -> PlaceResponse:
         """Return a single place by ID."""
-        place_lat = func.ST_Y(func.ST_GeomFromWKB(Place.location)).label("place_lat")
-        place_lon = func.ST_X(func.ST_GeomFromWKB(Place.location)).label("place_lon")
+        place_lat = extract_lat(Place.location).label("place_lat")
+        place_lon = extract_lon(Place.location).label("place_lon")
 
         stmt = (
             select(Place, Category.slug.label("category_slug"), place_lat, place_lon)

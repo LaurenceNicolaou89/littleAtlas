@@ -18,11 +18,6 @@ logger = logging.getLogger(__name__)
 
 NEARBY_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
 PLACE_DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json"
-PHOTO_URL_TEMPLATE = (
-    "https://maps.googleapis.com/maps/api/place/photo"
-    "?maxwidth=800&photo_reference={ref}&key={key}"
-)
-
 # Google Place types to search
 SEARCH_TYPES = [
     "restaurant",
@@ -67,16 +62,14 @@ class GooglePlacesCrawler(BaseCrawler):
         return None
 
     def _extract_photos(self, result: dict) -> list[str]:
-        """Extract photo URLs from place result."""
+        """Extract photo references from place result (no API key in URLs)."""
         photos = result.get("photos", [])
-        urls = []
+        refs = []
         for photo in photos[:5]:
             ref = photo.get("photo_reference")
             if ref:
-                urls.append(
-                    PHOTO_URL_TEMPLATE.format(ref=ref, key=self._api_key)
-                )
-        return urls
+                refs.append(ref)
+        return refs
 
     async def parse(self, raw_data: dict) -> dict | None:
         """Parse a Google Places result into our schema."""

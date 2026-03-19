@@ -1,0 +1,47 @@
+# Production Docker Compose for Little Atlas
+#
+# Required environment variables:
+#   POSTGRES_USER       — PostgreSQL username
+#   POSTGRES_PASSWORD   — PostgreSQL password (use a strong random value)
+#   OPENWEATHERMAP_API_KEY — OpenWeatherMap API key
+#   GOOGLE_PLACES_API_KEY  — Google Places API key
+#
+# Usage: docker compose -f docker-compose.prod.yml up -d
+
+services:
+  api:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/littleatlas
+      - REDIS_URL=redis://redis:6379
+      - OPENWEATHERMAP_API_KEY=${OPENWEATHERMAP_API_KEY}
+      - GOOGLE_PLACES_API_KEY=${GOOGLE_PLACES_API_KEY}
+      - ENVIRONMENT=production
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
+
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: littleatlas
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d littleatlas"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+
+volumes:
+  pgdata:

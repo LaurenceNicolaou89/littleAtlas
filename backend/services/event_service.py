@@ -10,6 +10,7 @@ import redis.asyncio as aioredis
 from models.event import Event
 from schemas.event import EventResponse
 from services.common import localized, resolve_age_range
+from services.geo_utils import extract_lat, extract_lon
 
 
 class EventService:
@@ -25,6 +26,7 @@ class EventService:
         date_from: datetime.date | None = None,
         date_to: datetime.date | None = None,
         age_group: str | None = None,
+        event_type: str | None = None,
         lang: str = "en",
         offset: int = 0,
         limit: int = 50,
@@ -56,8 +58,8 @@ class EventService:
         ).label("happening_now")
 
         # Extract lat/lon in the main SELECT to avoid N+1 per-row queries
-        event_lat = func.ST_Y(func.ST_GeomFromWKB(Event.location)).label("event_lat")
-        event_lon = func.ST_X(func.ST_GeomFromWKB(Event.location)).label("event_lon")
+        event_lat = extract_lat(Event.location).label("event_lat")
+        event_lon = extract_lon(Event.location).label("event_lon")
 
         # Include events that are either happening now OR upcoming
         if date_from is not None:
@@ -88,6 +90,9 @@ class EventService:
             stmt = stmt.where(Event.start_date <= datetime.datetime.combine(
                 date_to, datetime.time.max, tzinfo=datetime.timezone.utc
             ))
+
+        if event_type is not None:
+            stmt = stmt.where(Event.event_type == event_type)
 
         if age_group is not None:
             age_range = resolve_age_range(age_group)
@@ -123,6 +128,7 @@ class EventService:
                     age_min=event.age_min,
                     age_max=event.age_max,
                     source_url=event.source_url,
+                    event_type=event.event_type,
                 )
             )
         return events, total

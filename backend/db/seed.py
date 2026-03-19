@@ -1,9 +1,13 @@
 """Seed script -- populates categories table with initial data."""
 
 import asyncio
+import logging
 import os
+
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import text
+
+logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
@@ -55,7 +59,7 @@ async def seed():
         await session.commit()
 
     await engine.dispose()
-    print(f"Seeded {len(CATEGORIES)} categories.")
+    logger.info("Seeded %d categories.", len(CATEGORIES))
 
 
 if __name__ == "__main__":

@@ -12,8 +12,8 @@ from services.common import localized
 
 router = APIRouter(tags=["categories"])
 
-# Cache categories for 24 hours
-CATEGORIES_CACHE_TTL = 86400
+# Cache categories for 1 hour
+CATEGORIES_CACHE_TTL = 3600
 
 
 @router.get("/categories", response_model=CategoryListResponse)

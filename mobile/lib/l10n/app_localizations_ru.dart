@@ -352,7 +352,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get weatherSuggestionIndoor => 'Уютный день дома! Попробуйте музей';
 
   @override
-  String get weatherSuggestionCaution => 'Оставайтесь в прохладе — развлечения в помещении!';
+  String get weatherSuggestionCaution =>
+      'Оставайтесь в прохладе — развлечения в помещении!';
 
   @override
   String get popularThisWeek => 'Популярное на этой неделе';

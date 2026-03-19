@@ -18,6 +18,7 @@ class EventResponse(BaseModel):
     age_min: int = 0
     age_max: int = 18
     source_url: str | None = None
+    event_type: str | None = None
 
     model_config = {"from_attributes": True}
 

@@ -9,42 +9,12 @@ from fastapi import HTTPException
 
 from config import settings
 from schemas.weather import WeatherResponse
+from services.weather_utils import calculate_weather_mode
 
 logger = logging.getLogger(__name__)
 
 # Cache weather data for 30 minutes per business-logic.md
 WEATHER_CACHE_TTL = 1800
-
-
-def _calculate_weather_mode(
-    temp: float | None,
-    rain: float,
-    wind_speed_kmh: float,
-    uv_index: float | None,
-) -> str:
-    """Determine weather mode per business-logic.md decision tree.
-
-    Returns one of: "indoor", "caution", "outdoor".
-    """
-    # Rain > 0 -> indoor
-    if rain > 0:
-        return "indoor"
-    # Temperature checks
-    if temp is not None:
-        if temp < 10:
-            return "indoor"
-        if temp > 38:
-            return "indoor"
-    # Wind > 50 km/h -> indoor
-    if wind_speed_kmh > 50:
-        return "indoor"
-    # UV >= 8 -> caution
-    if uv_index is not None and uv_index >= 8:
-        return "caution"
-    # Temp 10-15 -> caution
-    if temp is not None and 10 <= temp <= 15:
-        return "caution"
-    return "outdoor"
 
 
 class WeatherService:
@@ -101,7 +71,7 @@ class WeatherService:
                         uv_data = uv_resp.json()
                         uv_index = uv_data.get("current", {}).get("uvi")
                 except Exception:
-                    pass  # UV index is optional; proceed without it
+                    logger.debug("UV index fetch failed, proceeding without", exc_info=True)
 
         except httpx.HTTPStatusError as exc:
             logger.error("Weather API HTTP error: %s", exc.response.status_code)
@@ -131,7 +101,7 @@ class WeatherService:
         # Rain volume in last 1h (mm); 0 if no rain
         rain_1h = rain_data.get("1h", 0.0)
 
-        weather_mode = _calculate_weather_mode(
+        weather_mode = calculate_weather_mode(
             temp=temp,
             rain=rain_1h,
             wind_speed_kmh=wind_speed_kmh,

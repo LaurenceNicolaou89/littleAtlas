@@ -70,6 +70,34 @@ async def run_event_crawler() -> None:
         logger.exception("[scheduler] Event crawler job failed")
 
 
+async def run_cinema_crawler() -> None:
+    """Scheduled job: run cinema crawler."""
+    from crawlers.cinema_crawler import CinemaCrawler
+
+    logger.info("[scheduler] Cinema crawler job starting")
+    try:
+        async with async_session_factory() as session:
+            crawler = CinemaCrawler(db=session)
+            count = await crawler.crawl()
+            logger.info("[scheduler] Cinema crawler job finished — %d items", count)
+    except Exception:
+        logger.exception("[scheduler] Cinema crawler job failed")
+
+
+async def run_theatre_crawler() -> None:
+    """Scheduled job: run theatre crawler."""
+    from crawlers.theatre_crawler import TheatreCrawler
+
+    logger.info("[scheduler] Theatre crawler job starting")
+    try:
+        async with async_session_factory() as session:
+            crawler = TheatreCrawler(db=session)
+            count = await crawler.crawl()
+            logger.info("[scheduler] Theatre crawler job finished — %d items", count)
+    except Exception:
+        logger.exception("[scheduler] Theatre crawler job failed")
+
+
 async def run_weather_sync(redis: aioredis.Redis) -> None:
     """Scheduled job: sync weather for major Cyprus cities."""
     from crawlers.weather_sync import sync_weather
@@ -121,6 +149,28 @@ def start_scheduler(redis: aioredis.Redis | None = None) -> None:
         misfire_grace_time=3600,
     )
 
+    # Cinema crawler: daily at 6:00 AM
+    scheduler.add_job(
+        run_cinema_crawler,
+        "cron",
+        hour=6,
+        minute=0,
+        id="cinema_crawler",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
+
+    # Theatre crawler: daily at 6:30 AM
+    scheduler.add_job(
+        run_theatre_crawler,
+        "cron",
+        hour=6,
+        minute=30,
+        id="theatre_crawler",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
+
     # Weather sync: every 30 minutes
     if redis is not None:
         scheduler.add_job(
@@ -154,6 +204,8 @@ async def trigger_crawler(name: str, redis: aioredis.Redis | None = None) -> str
         "osm": run_osm_crawler,
         "google": run_google_places_crawler,
         "events": run_event_crawler,
+        "cinema": run_cinema_crawler,
+        "theatre": run_theatre_crawler,
     }
 
     if name == "weather":

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 import redis.asyncio as aioredis
 
@@ -11,6 +11,7 @@ router = APIRouter(tags=["places"])
 
 @router.get("/places", response_model=PlaceListResponse)
 async def list_places(
+    request: Request,
     lat: float = Query(..., ge=-90, le=90, description="Latitude"),
     lon: float = Query(..., ge=-180, le=180, description="Longitude"),
     radius: int = Query(5000, ge=100, le=50000, description="Search radius in metres"),
