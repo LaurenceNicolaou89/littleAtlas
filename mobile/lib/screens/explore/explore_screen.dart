@@ -5,18 +5,18 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import 'package:little_atlas/app.dart';
 import 'package:little_atlas/l10n/app_localizations.dart';
 import 'package:little_atlas/models/place.dart';
 import 'package:little_atlas/providers/places_provider.dart';
 import 'package:little_atlas/providers/weather_provider.dart';
 import 'package:little_atlas/screens/place_detail/place_detail_screen.dart';
 import 'package:little_atlas/services/location_service.dart';
+import 'package:little_atlas/theme/design_tokens.dart';
 import 'package:little_atlas/widgets/category_chips.dart';
 import 'package:little_atlas/widgets/map/place_marker.dart';
 import 'package:little_atlas/widgets/map/place_preview.dart';
-import 'package:little_atlas/widgets/place_card.dart';
-import 'package:little_atlas/widgets/weather_banner.dart';
+import 'package:little_atlas/widgets/place_card_horizontal.dart';
+import 'package:little_atlas/widgets/weather_hero_card.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -33,7 +33,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
   bool _initialLocationLoaded = false;
   Place? _selectedPlace;
 
-  // Finding #12: debounce map pan to avoid API calls on every frame.
   Timer? _mapMoveDebounce;
 
   @override
@@ -45,7 +44,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   void dispose() {
     _mapMoveDebounce?.cancel();
-    _mapController.dispose(); // Finding #19
+    _mapController.dispose();
     super.dispose();
   }
 
@@ -72,7 +71,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final center = camera.center;
     _currentCenter = center;
 
-    // Finding #12: 500ms debounce.
     _mapMoveDebounce?.cancel();
     _mapMoveDebounce = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
@@ -117,14 +115,33 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
+  String _weatherModeString(dynamic mode) {
+    return mode.toString().split('.').last;
+  }
+
   @override
   Widget build(BuildContext context) {
     final weatherProvider = context.watch<WeatherProvider>();
     final placesProvider = context.watch<PlacesProvider>();
     final places = placesProvider.filteredPlaces;
     final weather = weatherProvider.weather;
+    final l10n = AppLocalizations.of(context)!;
+
+    // Determine suggestion text for WeatherHeroCard
+    String weatherSuggestion = '';
+    if (weather != null) {
+      switch (_weatherModeString(weather.mode)) {
+        case 'outdoor':
+          weatherSuggestion = l10n.weatherOutdoor;
+        case 'indoor':
+          weatherSuggestion = l10n.weatherIndoor;
+        case 'caution':
+          weatherSuggestion = l10n.weatherCaution;
+      }
+    }
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // ── Map (full screen, bottom layer) ─────────────────────
@@ -151,19 +168,24 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ],
           ),
 
-          // ── Weather banner (top) ────────────────────────────────
+          // ── Weather hero card (top) ─────────────────────────────
           if (weather != null)
             Positioned(
-              top: MediaQuery.of(context).padding.top,
+              top: MediaQuery.of(context).padding.top + 8,
               left: 0,
               right: 0,
-              child: WeatherBanner(weather: weather),
+              child: WeatherHeroCard(
+                temperature: weather.temp,
+                description: weather.description,
+                weatherMode: _weatherModeString(weather.mode),
+                suggestion: weatherSuggestion,
+              ),
             ),
 
-          // ── Category chips (below weather banner) ───────────────
+          // ── Category chips (below weather card) ─────────────────
           Positioned(
             top: MediaQuery.of(context).padding.top +
-                (weather != null ? 48 : 0),
+                (weather != null ? 96 : 0),
             left: 0,
             right: 0,
             child: const CategoryChips(),
@@ -191,15 +213,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
           Positioned(
             bottom: MediaQuery.of(context).size.height * 0.1 + 16,
             right: 16,
-            child: FloatingActionButton(
-              heroTag: 'myLocation',
-              mini: true,
-              elevation: 4,
-              backgroundColor: Colors.white,
-              onPressed: _recenterOnLocation,
-              child: const Icon(
-                Icons.my_location,
-                color: LittleAtlasApp.atlasGreen, // Finding #18
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                boxShadow: AppShadows.card,
+              ),
+              child: IconButton(
+                onPressed: _recenterOnLocation,
+                icon: const Icon(
+                  Icons.my_location,
+                  color: AppColors.primary,
+                ),
               ),
             ),
           ),
@@ -219,10 +244,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
       snapSizes: const [0.1, 0.4, 0.8],
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-            boxShadow: [
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: AppRadii.sheetBorder,
+            boxShadow: const [
               BoxShadow(
                 color: Colors.black12,
                 blurRadius: 10,
@@ -243,7 +268,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: LittleAtlasApp.textTertiary, // Finding #18
+                          color: AppColors.textTertiary,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -252,7 +277,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         l10n.pullUpForNearby,
                         style: const TextStyle(
                           fontSize: 12,
-                          color: LittleAtlasApp.textTertiary,
+                          color: AppColors.textTertiary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -269,23 +294,23 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           l10n.noPlacesNearby,
                           style: const TextStyle(
                             fontSize: 14,
-                            color: LittleAtlasApp.textTertiary,
+                            color: AppColors.textTertiary,
                           ),
                         ),
                       )
                     : ListView.separated(
                         controller: scrollController,
-                        padding: EdgeInsets.zero,
-                        itemCount: places.length,
-                        separatorBuilder: (_, __) => const Divider(
-                          height: 1,
-                          indent: 16,
-                          endIndent: 16,
-                          color: Color(0xFFEEEEEE),
+                        padding: const EdgeInsets.only(
+                          left: AppSpacing.lg,
+                          right: AppSpacing.lg,
+                          bottom: 80,
                         ),
+                        itemCount: places.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: AppSpacing.md),
                         itemBuilder: (context, index) {
                           final place = places[index];
-                          return PlaceCard(
+                          return PlaceCardHorizontal(
                             place: place,
                             onTap: () => _navigateToPlaceDetail(place),
                           );
