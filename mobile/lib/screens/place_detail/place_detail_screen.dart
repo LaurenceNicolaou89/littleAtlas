@@ -149,19 +149,22 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                 setState(() => _currentPhotoPage = index);
               },
               itemBuilder: (context, index) {
-                return CachedNetworkImage(
-                  imageUrl: place.photos[index],
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  placeholder: (context, url) => Container(
-                    color: bgColor.withValues(alpha: 0.3),
-                    child: const Center(
-                      child: CircularProgressIndicator(),
+                return Semantics(
+                  label: '${place.name} photo',
+                  child: CachedNetworkImage(
+                    imageUrl: place.photos[index],
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    placeholder: (context, url) => Container(
+                      color: bgColor.withValues(alpha: 0.3),
+                      child: const Center(
+                        child: CircularProgressIndicator(),
+                      ),
                     ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: bgColor.withValues(alpha: 0.3),
-                    child: Icon(iconData, size: 48, color: Colors.white),
+                    errorWidget: (context, url, error) => Container(
+                      color: bgColor.withValues(alpha: 0.3),
+                      child: Icon(iconData, size: 48, color: Colors.white),
+                    ),
                   ),
                 );
               },

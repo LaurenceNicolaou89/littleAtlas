@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +17,7 @@ import 'package:little_atlas/widgets/category_chips.dart';
 import 'package:little_atlas/widgets/map/place_marker.dart';
 import 'package:little_atlas/widgets/map/place_preview.dart';
 import 'package:little_atlas/widgets/place_card_horizontal.dart';
+import 'package:little_atlas/utils/transitions.dart';
 import 'package:little_atlas/widgets/weather_hero_card.dart';
 
 class ExploreScreen extends StatefulWidget {
@@ -33,6 +35,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Place? _selectedPlace;
 
   Timer? _mapMoveDebounce;
+  double _lastSheetExtent = 0.1;
 
   @override
   void initState() {
@@ -107,9 +110,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   void _navigateToPlaceDetail(Place place) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => PlaceDetailScreen(place: place),
-      ),
+      slideUpRoute(PlaceDetailScreen(place: place)),
     );
   }
 
@@ -234,13 +235,30 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget _buildBottomSheet(List<Place> places) {
     final l10n = AppLocalizations.of(context)!;
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.1,
-      minChildSize: 0.1,
-      maxChildSize: 0.8,
-      snap: true,
-      snapSizes: const [0.1, 0.4, 0.8],
-      builder: (context, scrollController) {
+    return NotificationListener<DraggableScrollableNotification>(
+      onNotification: (notification) {
+        // Fire haptic when the sheet crosses a snap threshold.
+        const snapPoints = [0.1, 0.4, 0.8];
+        for (final snap in snapPoints) {
+          final crossedUp =
+              _lastSheetExtent < snap && notification.extent >= snap;
+          final crossedDown =
+              _lastSheetExtent > snap && notification.extent <= snap;
+          if (crossedUp || crossedDown) {
+            HapticFeedback.lightImpact();
+            break;
+          }
+        }
+        _lastSheetExtent = notification.extent;
+        return false;
+      },
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.1,
+        minChildSize: 0.1,
+        maxChildSize: 0.8,
+        snap: true,
+        snapSizes: const [0.1, 0.4, 0.8],
+        builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
@@ -319,6 +337,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ),
         );
       },
+      ),
     );
   }
 }

@@ -14,6 +14,7 @@ import 'package:little_atlas/widgets/branded_skeleton.dart';
 import 'package:little_atlas/widgets/filter_chip_removable.dart';
 import 'package:little_atlas/widgets/filter_sheet.dart';
 import 'package:little_atlas/widgets/gradient_button.dart';
+import 'package:little_atlas/utils/transitions.dart';
 import 'package:little_atlas/widgets/place_card_full_width.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -411,9 +412,7 @@ class _SearchScreenState extends State<SearchScreen> {
               place: place,
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => PlaceDetailScreen(place: place),
-                  ),
+                  slideUpRoute(PlaceDetailScreen(place: place)),
                 );
               },
               onShowOnMap: _navigateToMapTab,

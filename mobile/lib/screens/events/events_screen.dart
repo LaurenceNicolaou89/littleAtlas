@@ -12,6 +12,7 @@ import '../../theme/design_tokens.dart';
 import '../../widgets/branded_skeleton.dart';
 import '../../widgets/event_card_redesign.dart';
 import '../../widgets/gradient_button.dart';
+import '../../utils/transitions.dart';
 import '../event_detail/event_detail_screen.dart';
 import '../home/home_screen.dart';
 
@@ -235,9 +236,7 @@ class _EventsScreenState extends State<EventsScreen> {
 
   void _navigateToDetail(Event event) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => EventDetailScreen(event: event),
-      ),
+      slideUpRoute(EventDetailScreen(event: event)),
     );
   }
 

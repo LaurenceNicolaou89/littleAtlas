@@ -213,19 +213,22 @@ class EventDetailScreen extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           // Gradient background based on event type
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: _gradientColors,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          Semantics(
+            label: event.title,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: _gradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
-            ),
-            child: Center(
-              child: Icon(
-                Icons.event,
-                size: 56,
-                color: Colors.white.withValues(alpha: 0.25),
+              child: Center(
+                child: Icon(
+                  Icons.event,
+                  size: 56,
+                  color: Colors.white.withValues(alpha: 0.25),
+                ),
               ),
             ),
           ),

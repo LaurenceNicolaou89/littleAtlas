@@ -19,6 +19,7 @@ import '../../widgets/event_card_horizontal.dart';
 import '../../widgets/place_card_full_width.dart';
 import '../../widgets/place_card_horizontal.dart';
 import '../../widgets/section_header.dart';
+import '../../utils/transitions.dart';
 import '../../widgets/weather_hero_card.dart';
 
 /// The Discovery home screen — the default tab that shows weather, events,
@@ -315,9 +316,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          EventDetailScreen(event: event),
+                                    slideUpRoute(
+                                      EventDetailScreen(event: event),
                                     ),
                                   );
                                 },
@@ -433,9 +433,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        PlaceDetailScreen(place: place),
+                                  slideUpRoute(
+                                    PlaceDetailScreen(place: place),
                                   ),
                                 );
                               },

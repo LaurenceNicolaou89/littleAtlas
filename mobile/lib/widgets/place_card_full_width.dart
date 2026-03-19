@@ -65,11 +65,14 @@ class PlaceCardFullWidth extends StatelessWidget {
           children: [
             // Image or gradient placeholder
             if (place.photos.isNotEmpty)
-              CachedNetworkImage(
-                imageUrl: place.photos.first,
-                fit: BoxFit.cover,
-                placeholder: (_, __) => _gradientPlaceholder(catColor),
-                errorWidget: (_, __, ___) => _gradientPlaceholder(catColor),
+              Semantics(
+                label: place.name,
+                child: CachedNetworkImage(
+                  imageUrl: place.photos.first,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => _gradientPlaceholder(catColor),
+                  errorWidget: (_, __, ___) => _gradientPlaceholder(catColor),
+                ),
               )
             else
               _gradientPlaceholder(catColor),
