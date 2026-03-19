@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:latlong2/latlong.dart';
 
-import '../../app.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/event.dart';
+import '../../theme/design_tokens.dart';
 import '../../utils/formatters.dart';
 import '../../utils/launchers.dart';
+import '../../widgets/date_block.dart';
+import '../../widgets/gradient_button.dart';
+import '../../widgets/info_pill.dart';
+import '../../widgets/live_badge.dart';
+import '../../widgets/section_header.dart';
 
 class EventDetailScreen extends StatelessWidget {
   final Event event;
@@ -17,204 +21,459 @@ class EventDetailScreen extends StatelessWidget {
     required this.event,
   });
 
-  String _formatDateRange() {
-    final dateFormat = DateFormat('EEEE, MMM d, yyyy');
-    final timeFormat = DateFormat('HH:mm');
+  // ── Helpers ─────────────────────────────────────────────────────────
 
-    final isSameDay = event.startDate.year == event.endDate.year &&
-        event.startDate.month == event.endDate.month &&
-        event.startDate.day == event.endDate.day;
-
-    if (isSameDay) {
-      return '${dateFormat.format(event.startDate)}\n'
-          '${timeFormat.format(event.startDate)} - ${timeFormat.format(event.endDate)}';
-    }
-
-    return '${dateFormat.format(event.startDate)} ${timeFormat.format(event.startDate)}\n'
-        '${dateFormat.format(event.endDate)} ${timeFormat.format(event.endDate)}';
+  bool get _isHappeningNow {
+    if (event.endDate == null) return false;
+    final now = DateTime.now();
+    return event.startDate.isBefore(now) && event.endDate!.isAfter(now);
   }
+
+  /// Returns a pair of gradient colors based on [Event.eventType].
+  List<Color> get _gradientColors {
+    switch (event.eventType?.toLowerCase()) {
+      case 'cinema':
+        return const [Color(0xFFFF7675), Color(0xFFE17055)]; // coral
+      case 'theatre':
+        return const [Color(0xFF74B9FF), Color(0xFF0984E3)]; // blue
+      case 'workshop':
+        return const [Color(0xFF00B894), Color(0xFF00CEC9)]; // green
+      case 'festival':
+        return const [Color(0xFFA29BFE), Color(0xFF6C5CE7)]; // violet
+      default:
+        return const [Color(0xFFA29BFE), Color(0xFFFD79A8)]; // violet→pink
+    }
+  }
+
+  String _formatTimeRange() {
+    final timeFormat = DateFormat('HH:mm');
+    if (event.endDate == null) {
+      return timeFormat.format(event.startDate);
+    }
+    return '${timeFormat.format(event.startDate)}-${timeFormat.format(event.endDate!)}';
+  }
+
+  String _formatDateLabel() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final eventDay = DateTime(
+      event.startDate.year,
+      event.startDate.month,
+      event.startDate.day,
+    );
+
+    if (eventDay == today) {
+      return 'Today, ${_formatTimeRange()}';
+    }
+    final tomorrow = today.add(const Duration(days: 1));
+    if (eventDay == tomorrow) {
+      return 'Tomorrow, ${_formatTimeRange()}';
+    }
+    return '${DateFormat('EEEE, MMM d').format(event.startDate)}, '
+        '${_formatTimeRange()}';
+  }
+
+  String _formatDuration() {
+    if (event.endDate == null) return '';
+    final diff = event.endDate!.difference(event.startDate);
+    if (diff.inHours > 0) {
+      final mins = diff.inMinutes % 60;
+      if (mins > 0) {
+        return '${diff.inHours}h ${mins}min';
+      }
+      return '${diff.inHours}h';
+    }
+    return '${diff.inMinutes}min';
+  }
+
+  // ── Build ───────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.event),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Event title (H1)
-            Text(
-              event.title,
-              style: textTheme.headlineLarge,
-            ),
-            const SizedBox(height: 16),
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHero(context),
+                  const SizedBox(height: AppSpacing.lg),
 
-            // Date and time with calendar icon
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.calendar_today,
-                  size: 20,
-                  color: LittleAtlasApp.atlasGreen,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    _formatDateRange(),
-                    style: textTheme.bodyLarge,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
+                  // Date/time card
+                  _buildDateTimeCard(),
+                  const SizedBox(height: AppSpacing.lg),
 
-            // Venue name and address with map pin icon
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.place,
-                  size: 20,
-                  color: LittleAtlasApp.atlasGreen,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.venueName,
-                        style: textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
+                  // Info pills
+                  _buildInfoPills(),
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // About
+                  if (event.description.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: const SectionHeader(
+                        title: 'ABOUT THIS EVENT',
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: Text(
+                        event.description,
+                        style: GoogleFonts.nunito(
+                          fontSize: 13,
+                          height: 1.6,
+                          color: AppColors.textSecondary,
                         ),
                       ),
-                      if (event.address != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          event.address!,
-                          style: textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                  ],
+
+                  // Venue
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                    ),
+                    child: const SectionHeader(title: 'VENUE'),
+                  ),
+                  _buildVenueSection(),
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // View source link
+                  if (event.sourceUrl != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: GestureDetector(
+                        onTap: () => launchWebsite(event.sourceUrl!),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.open_in_new,
+                              size: 16,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(
+                              l10n.viewSource,
+                              style: GoogleFonts.nunito(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ],
+                      ),
+                    ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+              ),
+            ),
+          ),
+
+          // CTA button
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.sm,
+              AppSpacing.lg,
+              AppSpacing.xl,
+            ),
+            child: GradientButton(
+              label: l10n.getDirections,
+              icon: Icons.near_me,
+              onTap: () => launchDirections(
+                event.lat ?? 0,
+                event.lon ?? 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Hero ───────────────────────────────────────────────────────────
+
+  Widget _buildHero(BuildContext context) {
+    return SizedBox(
+      height: 220,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Gradient background based on event type
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: _gradientColors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Center(
+              child: Icon(
+                Icons.event,
+                size: 56,
+                color: Colors.white.withValues(alpha: 0.25),
+              ),
+            ),
+          ),
+
+          // Bottom gradient overlay
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 100,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.7),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Title + LiveBadge + category on gradient
+          Positioned(
+            bottom: AppSpacing.lg,
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_isHappeningNow) ...[
+                  const LiveBadge(),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+                Text(
+                  event.title,
+                  style: GoogleFonts.nunito(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  (event.eventType ?? 'event')
+                      .replaceAll('_', ' ')
+                      .toUpperCase(),
+                  style: GoogleFonts.nunito(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withValues(alpha: 0.85),
+                    letterSpacing: 0.8,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+          ),
 
-            // Age suitability with baby icon — using shared formatter
-            if (event.ageMin != null || event.ageMax != null) ...[
-              Row(
-                children: [
-                  const Icon(
-                    Icons.child_care,
-                    size: 20,
-                    color: LittleAtlasApp.atlasGreen,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    formatAgeRange(event.ageMin, event.ageMax),
-                    style: textTheme.bodyLarge,
+          // Back button — white circle, top-left
+          Positioned(
+            top: MediaQuery.of(context).padding.top + AppSpacing.sm,
+            left: AppSpacing.sm,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-            ],
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                iconSize: 18,
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-            // Small map showing event location
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: SizedBox(
-                height: 200,
-                width: double.infinity,
-                child: IgnorePointer(
-                  child: FlutterMap(
-                    options: MapOptions(
-                      initialCenter: LatLng(event.lat, event.lon),
-                      initialZoom: 15,
+  // ── Date/Time Card ────────────────────────────────────────────────
+
+  Widget _buildDateTimeCard() {
+    final duration = _formatDuration();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadii.cardBorder,
+          boxShadow: AppShadows.card,
+        ),
+        child: Row(
+          children: [
+            DateBlock(
+              date: event.startDate,
+              gradient: const [AppColors.primary, AppColors.primaryLight],
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _formatDateLabel(),
+                    style: GoogleFonts.nunito(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
                     ),
-                    children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.littleatlas.app',
-                      ),
-                      MarkerLayer(
-                        markers: [
-                          Marker(
-                            point: LatLng(event.lat, event.lon),
-                            width: 36,
-                            height: 36,
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                color: LittleAtlasApp.atlasGreen, // Finding #18
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.event,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
                   ),
-                ),
+                  if (duration.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      duration,
+                      style: GoogleFonts.nunito(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Description text
-            if (event.description.isNotEmpty) ...[
-              Text(
-                event.description,
-                style: textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 24),
-            ],
-
-            // Get Directions button — using shared launcher
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: () => launchDirections(event.lat, event.lon),
-                icon: const Icon(Icons.directions),
-                label: Text(l10n.getDirections),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: LittleAtlasApp.atlasGreen,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ),
-
-            // View Source link button — using shared launcher
-            if (event.sourceUrl != null) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton.icon(
-                  onPressed: () => launchWebsite(event.sourceUrl!),
-                  icon: const Icon(Icons.open_in_new),
-                  label: Text(l10n.viewSource),
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 24),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Info Pills ────────────────────────────────────────────────────
+
+  Widget _buildInfoPills() {
+    final pills = <Widget>[];
+
+    // Age range pill — pink tint
+    final ageText = formatAgeRange(event.ageMin, event.ageMax);
+    if (ageText.isNotEmpty) {
+      pills.add(
+        InfoPill(
+          label: ageText,
+          icon: Icons.child_care,
+          backgroundColor: const Color(0xFFFFF0F6),
+          textColor: AppColors.rosePink,
+        ),
+      );
+    }
+
+    // Distance pill — green tint
+    if (event.distanceM != null) {
+      pills.add(
+        InfoPill(
+          label: formatDistance(event.distanceM),
+          icon: Icons.near_me,
+          backgroundColor: const Color(0xFFE0FFF9),
+          textColor: AppColors.aquaTeal,
+        ),
+      );
+    }
+
+    if (pills.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: pills,
+      ),
+    );
+  }
+
+  // ── Venue Section ─────────────────────────────────────────────────
+
+  Widget _buildVenueSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Mini-map placeholder
+          Container(
+            height: 100,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: AppRadii.cardBorder,
+              gradient: const LinearGradient(
+                colors: [AppColors.divider, AppColors.primaryWash],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                event.venueName,
+                style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // Venue name
+          Text(
+            event.venueName,
+            style: GoogleFonts.nunito(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+
+          // Address
+          if (event.address != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              event.address!,
+              style: GoogleFonts.nunito(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

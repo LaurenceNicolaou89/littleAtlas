@@ -1,60 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../app.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/place.dart';
+import '../../theme/design_tokens.dart';
+import '../../utils/amenity_utils.dart';
 import '../../utils/formatters.dart';
 import '../../utils/launchers.dart';
 import '../../widgets/category_chips.dart';
-
-/// Maps amenity slugs to their display icon.
-const Map<String, IconData> _amenityIcons = {
-  'changing_table': Icons.baby_changing_station,
-  'high_chair': Icons.chair,
-  'kids_menu': Icons.restaurant_menu,
-  'stroller_access': Icons.accessible,
-  'fenced_area': Icons.fence,
-  'parking': Icons.local_parking,
-  'wheelchair_access': Icons.wheelchair_pickup,
-  'nursing_room': Icons.child_friendly,
-  'shade': Icons.umbrella,
-  'water_fountain': Icons.water_drop,
-  'toilets': Icons.wc,
-  'wifi': Icons.wifi,
-};
-
-/// Returns localized amenity label for the given slug.
-String _amenityLabel(String slug, AppLocalizations l10n) {
-  switch (slug) {
-    case 'changing_table':
-      return l10n.amenityChangingTable;
-    case 'high_chair':
-      return l10n.amenityHighChair;
-    case 'kids_menu':
-      return l10n.amenityKidsMenu;
-    case 'stroller_access':
-      return l10n.amenityStrollerAccess;
-    case 'fenced_area':
-      return l10n.amenityFencedArea;
-    case 'parking':
-      return l10n.amenityParking;
-    case 'wheelchair_access':
-      return l10n.amenityWheelchairAccess;
-    case 'nursing_room':
-      return l10n.amenityNursingRoom;
-    case 'shade':
-      return l10n.amenityShade;
-    case 'water_fountain':
-      return l10n.amenityWaterFountain;
-    case 'toilets':
-      return l10n.amenityToilets;
-    case 'wifi':
-      return l10n.amenityWifi;
-    default:
-      return slug.replaceAll('_', ' ');
-  }
-}
+import '../../widgets/gradient_button.dart';
+import '../../widgets/info_pill.dart';
+import '../../widgets/section_header.dart';
 
 class PlaceDetailScreen extends StatefulWidget {
   final Place place;
@@ -84,147 +41,106 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPhotoCarousel(context),
-            Padding(
-              padding: const EdgeInsets.all(16),
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Name
-                  Text(
-                    place.name,
-                    style: textTheme.headlineLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  // Category + city subtitle
-                  Text(
-                    place.category,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: LittleAtlasApp.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Divider(),
-                  const SizedBox(height: 12),
+                  _buildPhotoHero(context),
+                  const SizedBox(height: AppSpacing.lg),
 
-                  // Status row
-                  _buildStatusRow(textTheme),
-                  const SizedBox(height: 8),
-
-                  // Age suitability
-                  if (place.ageMin != null || place.ageMax != null) ...[
-                    _buildAgeSuitability(textTheme),
-                    const SizedBox(height: 12),
-                  ],
-                  const Divider(),
-                  const SizedBox(height: 12),
+                  // Quick info pills
+                  _buildInfoPills(),
+                  const SizedBox(height: AppSpacing.xl),
 
                   // Amenities
                   if (place.amenities.isNotEmpty) ...[
-                    Text(
-                      l10n.amenities,
-                      style: textTheme.headlineMedium,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: const SectionHeader(title: 'AMENITIES'),
                     ),
-                    const SizedBox(height: 8),
                     _buildAmenityChips(),
-                    const SizedBox(height: 12),
-                    const Divider(),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.xl),
                   ],
 
                   // About
                   if (place.description.isNotEmpty) ...[
-                    Text(
-                      l10n.about,
-                      style: textTheme.headlineMedium,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: const SectionHeader(title: 'ABOUT'),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      place.description,
-                      style: textTheme.bodyLarge,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: Text(
+                        place.description,
+                        style: GoogleFonts.nunito(
+                          fontSize: 13,
+                          height: 1.6,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    const Divider(),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.xl),
                   ],
 
                   // Details section
-                  Text(
-                    l10n.details,
-                    style: textTheme.headlineMedium,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                    ),
+                    child: SectionHeader(title: l10n.details),
                   ),
-                  const SizedBox(height: 8),
-
-                  // Address row
-                  if (place.address != null)
-                    _buildDetailRow(
-                      icon: Icons.place,
-                      text: place.address!,
-                      onTap: () => launchDirections(place.lat, place.lon),
-                    ),
-
-                  // Phone row
-                  if (place.phone != null)
-                    _buildDetailRow(
-                      icon: Icons.phone,
-                      text: place.phone!,
-                      onTap: () => launchPhone(place.phone!),
-                    ),
-
-                  // Website row
-                  if (place.website != null)
-                    _buildDetailRow(
-                      icon: Icons.language,
-                      text: place.website!,
-                      onTap: () => launchWebsite(place.website!),
-                    ),
-
-                  const SizedBox(height: 24),
-
-                  // Get Directions button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      onPressed: () => launchDirections(place.lat, place.lon),
-                      icon: const Icon(Icons.directions),
-                      label: Text(l10n.getDirections),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: LittleAtlasApp.atlasGreen,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                  _buildDetailsSection(),
+                  const SizedBox(height: AppSpacing.xl),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+
+          // CTA button
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.sm,
+              AppSpacing.lg,
+              AppSpacing.xl,
+            ),
+            child: GradientButton(
+              label: l10n.getDirections,
+              icon: Icons.near_me,
+              onTap: () => launchDirections(place.lat, place.lon),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // ── Photo carousel ─────────────────────────────────────────────────
+  // ── Photo Hero ────────────────────────────────────────────────────
 
-  Widget _buildPhotoCarousel(BuildContext context) {
+  Widget _buildPhotoHero(BuildContext context) {
     final hasPhotos = place.photos.isNotEmpty;
     final bgColor = categoryColor(place.category);
     final iconData = categoryIcon(place.category);
 
     return SizedBox(
-      height: 250,
+      height: 220,
       child: Stack(
+        fit: StackFit.expand,
         children: [
+          // Photo carousel or category gradient placeholder
           if (hasPhotos)
             PageView.builder(
               controller: _pageController,
@@ -252,21 +168,74 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
             )
           else
             Container(
-              width: double.infinity,
-              color: bgColor,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [bgColor, bgColor.withValues(alpha: 0.7)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
               child: Center(
-                child: Icon(
-                  iconData,
-                  size: 48,
-                  color: Colors.white,
+                child: Icon(iconData, size: 48, color: Colors.white),
+              ),
+            ),
+
+          // Bottom gradient overlay
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 100,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.7),
+                  ],
                 ),
               ),
             ),
+          ),
+
+          // Place name + category on gradient
+          Positioned(
+            bottom: AppSpacing.lg,
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  place.name,
+                  style: GoogleFonts.nunito(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  place.category.replaceAll('_', ' ').toUpperCase(),
+                  style: GoogleFonts.nunito(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withValues(alpha: 0.85),
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
+            ),
+          ),
 
           // Page indicator dots
           if (hasPhotos && place.photos.length > 1)
             Positioned(
-              bottom: 12,
+              bottom: AppSpacing.md,
               left: 0,
               right: 0,
               child: Row(
@@ -289,14 +258,31 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
               ),
             ),
 
-          // Back button
+          // Back button — white circle, top-left
           Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            left: 8,
-            child: CircleAvatar(
-              backgroundColor: Colors.black45,
+            top: MediaQuery.of(context).padding.top + AppSpacing.sm,
+            left: AppSpacing.sm,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
               child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                padding: EdgeInsets.zero,
+                iconSize: 18,
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: AppColors.textPrimary,
+                ),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
@@ -306,121 +292,167 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
     );
   }
 
-  // ── Status row ──────────────────────────────────────────────────────
+  // ── Quick Info Pills ──────────────────────────────────────────────
 
-  Widget _buildStatusRow(TextTheme textTheme) {
-    final distanceText = place.distanceM != null
-        ? formatDistance(place.distanceM)
-        : null;
+  Widget _buildInfoPills() {
+    final pills = <Widget>[];
 
-    return Row(
-      children: [
-        // Distance badge
-        if (distanceText != null) ...[
-          Icon(
-            Icons.near_me,
-            size: 16,
-            color: LittleAtlasApp.textSecondary,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            distanceText,
-            style: textTheme.bodyMedium,
-          ),
-        ],
-      ],
+    // TODO: open/closed status requires runtime check against openingHours
+    // For now we show a generic "Open" pill as placeholder
+    pills.add(
+      const InfoPill(
+        label: 'Open',
+        icon: Icons.check_circle_outline,
+        backgroundColor: Color(0xFFE0FFF9),
+        textColor: AppColors.statusOpen,
+      ),
     );
-  }
 
-  // ── Age suitability ─────────────────────────────────────────────────
+    // Distance pill
+    if (place.distanceM != null) {
+      pills.add(
+        InfoPill(
+          label: formatDistance(place.distanceM),
+          icon: Icons.near_me,
+          backgroundColor: AppColors.primaryWash,
+          textColor: AppColors.primary,
+        ),
+      );
+    }
 
-  Widget _buildAgeSuitability(TextTheme textTheme) {
+    // Age range pill
     final ageText = formatAgeRange(place.ageMin, place.ageMax);
-    return Row(
-      children: [
-        Icon(
-          Icons.child_care,
-          size: 18,
-          color: LittleAtlasApp.textSecondary,
+    if (ageText.isNotEmpty) {
+      pills.add(
+        InfoPill(
+          label: ageText,
+          icon: Icons.child_care,
+          backgroundColor: const Color(0xFFFFF0F6),
+          textColor: AppColors.rosePink,
         ),
-        const SizedBox(width: 4),
-        Text(
-          ageText,
-          style: textTheme.bodyMedium,
-        ),
-      ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: pills,
+      ),
     );
   }
 
-  // ── Amenity chips ───────────────────────────────────────────────────
+  // ── Amenity Chips ─────────────────────────────────────────────────
 
   Widget _buildAmenityChips() {
     final l10n = AppLocalizations.of(context)!;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: place.amenities.map((slug) {
-        final icon = _amenityIcons[slug];
-        final label = _amenityLabel(slug, l10n);
-        return Chip(
-          avatar: icon != null
-              ? Icon(
-                  icon,
-                  size: 16,
-                  color: LittleAtlasApp.atlasGreen,
-                )
-              : null,
-          label: Text(label),
-          backgroundColor: LittleAtlasApp.atlasGreenLight,
-          labelStyle: const TextStyle(
-            color: LittleAtlasApp.atlasGreen,
-            fontSize: 12,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          side: BorderSide.none,
-        );
-      }).toList(),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: place.amenities.map((slug) {
+          final icon = amenityIcons[slug];
+          final label = amenityLabel(slug, l10n);
+          return Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FA),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 14, color: AppColors.textSecondary),
+                  const SizedBox(width: AppSpacing.xs),
+                ],
+                Text(
+                  label,
+                  style: GoogleFonts.nunito(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
-  // ── Detail row ──────────────────────────────────────────────────────
+  // ── Details Section ───────────────────────────────────────────────
+
+  Widget _buildDetailsSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Column(
+        children: [
+          // Address row
+          if (place.address != null)
+            _buildDetailRow(
+              icon: Icons.place,
+              text: place.address!,
+              onTap: () => launchDirections(place.lat, place.lon),
+            ),
+
+          // Phone row
+          if (place.phone != null)
+            _buildDetailRow(
+              icon: Icons.phone,
+              text: place.phone!,
+              onTap: () => launchPhone(place.phone!),
+            ),
+
+          // Website row
+          if (place.website != null)
+            _buildDetailRow(
+              icon: Icons.language,
+              text: place.website!,
+              onTap: () => launchWebsite(place.website!),
+              isLink: true,
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildDetailRow({
     required IconData icon,
     required String text,
     VoidCallback? onTap,
+    bool isLink = false,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppSpacing.sm),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: LittleAtlasApp.atlasGreen,
-            ),
-            const SizedBox(width: 12),
+            Icon(icon, size: 20, color: AppColors.primary),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 text,
-                style: TextStyle(
+                style: GoogleFonts.nunito(
                   fontSize: 14,
-                  color: onTap != null
-                      ? LittleAtlasApp.atlasGreen
-                      : LittleAtlasApp.textPrimary,
+                  fontWeight: FontWeight.w500,
+                  color: isLink ? AppColors.primary : AppColors.textPrimary,
                 ),
               ),
             ),
             if (onTap != null)
-              const Icon(
+              Icon(
                 Icons.chevron_right,
                 size: 20,
-                color: LittleAtlasApp.textTertiary,
+                color: AppColors.textTertiary,
               ),
           ],
         ),
